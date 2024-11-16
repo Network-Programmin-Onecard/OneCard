@@ -1,6 +1,4 @@
-
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,12 +18,18 @@ public class OneCardGame extends JFrame {
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        client = new Client();
+        client = new Client(this::updateUserListInGamePanel);
         startPanel = new StartPanel(new StartButtonListener());
         cardPanel.add(startPanel, "Start");
 
         add(cardPanel);
         setVisible(true);
+    }
+
+    public void updateUserListInGamePanel(String userList) {
+        if (gamePanel != null) {
+            gamePanel.updateUserList(userList);
+        }
     }
 
     private class StartButtonListener implements ActionListener {
@@ -47,21 +51,8 @@ public class OneCardGame extends JFrame {
                 gamePanel = new GamePanel(userName, userList);
                 cardPanel.add(gamePanel, "Game");
                 cardLayout.show(cardPanel, "Game");
-
-                // 사용자 목록 업데이트 스레드
-                new Thread(() -> {
-                    while (true) {
-                        String updatedUserList = client.getUserList();
-                        gamePanel.updateUserList(updatedUserList);
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                }).start();
             } else {
-                JOptionPane.showMessageDialog(null, "서버에 연결할 수 없습니다.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(startPanel, "서버에 연결할 수 없습니다.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

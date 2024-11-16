@@ -1,11 +1,19 @@
 import java.io.*;
 import java.net.*;
+import java.util.function.Consumer;
+
+import javax.swing.SwingUtilities;
 
 public class Client {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
     private String userList;
+    private Consumer<String> updateUserListCallback;
+
+    public Client(Consumer<String> updateUserListCallback) {
+        this.updateUserListCallback = updateUserListCallback;
+    }
 
     public boolean connect(String ip, int port, String userName) {
         try {
@@ -30,7 +38,10 @@ public class Client {
             String message;
             while ((message = in.readLine()) != null) {
                 userList = message;
-                System.out.println(userList);
+                System.out.println("Received userList: " + userList);
+    
+                // UI 업데이트 콜백 호출
+                SwingUtilities.invokeLater(() -> updateUserListCallback.accept(userList));
             }
         } catch (IOException e) {
             e.printStackTrace();
