@@ -46,13 +46,16 @@ public class OneCardGame extends JFrame {
 
             // 서버에 연결 시도
             boolean connected = client.connect(ip, Integer.parseInt(port), userName);
+            System.out.println("Connected status: " + connected);
             if (connected) {
                 String userList = client.getUserList();
                 gamePanel = new GamePanel(userName, userList);
                 cardPanel.add(gamePanel, "Game");
                 cardLayout.show(cardPanel, "Game");
-            } else {
-                JOptionPane.showMessageDialog(startPanel, "서버에 연결할 수 없습니다.", "Error", JOptionPane.ERROR_MESSAGE);
+            
+                // 게임 화면 생성 후 즉시 사용자 목록 업데이트
+                gamePanel.updateUserList(userList);
+                System.out.println("GamePanel created and userList updated: " + userList);
             }
         }
     }

@@ -5,7 +5,7 @@ import java.util.*;
 public class Server {
     private static final List<ClientHandler> clients = new ArrayList<>();
     private static final int PORT = 30000;
-    private static final int MAX_CLIENTS = 4; // 최대 클라이언트 수
+    private static final int MAX_CLIENTS = 4;
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -20,9 +20,11 @@ public class Server {
                         System.out.println("최대 접속 인원 초과: 새로운 클라이언트의 접속을 거부합니다.");
                         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
                             out.println("서버에 접속할 수 없습니다. 최대 4명의 클라이언트만 접속 가능합니다.");
-                        }
+                            // 메시지 전송 후 잠시 대기 (클라이언트가 메시지를 읽을 수 있도록)
+                            Thread.sleep(500);
+                        } catch (InterruptedException ignored) {}
                         clientSocket.close();
-                        continue; // 다음 클라이언트 접속 대기
+                        continue;
                     }
 
                     // 새 클라이언트 접속 허용
@@ -57,7 +59,6 @@ public class Server {
         }
     }
 
-    // 클라이언트 핸들러 클래스
     private static class ClientHandler implements Runnable {
         private Socket socket;
         private BufferedReader in;
@@ -78,20 +79,22 @@ public class Server {
                 userName = in.readLine();
                 System.out.println(userName + "님이 접속하였습니다.");
 
+                // 새로운 클라이언트에게 즉시 사용자 목록 전송
+                out.println(getUserList());
+
                 // 모든 클라이언트에게 업데이트된 사용자 목록 전송
                 broadcastUserList();
 
-                // 메시지 수신 대기 (연결이 끊길 때까지)
+                // 메시지 수신 대기
                 String message;
                 while ((message = in.readLine()) != null) {
-                    // 클라이언트로부터 메시지를 수신할 경우 처리 (현재는 사용자 목록만 전송 중)
+                    // 추가적인 메시지 처리가 필요하다면 여기에 작성
                 }
             } catch (IOException e) {
                 System.out.println(userName + "님이 연결을 종료하였습니다.");
             } finally {
                 // 연결 종료 시 클라이언트를 리스트에서 제거
                 removeClient(this);
-                // 업데이트된 사용자 목록 전송
                 broadcastUserList();
             }
         }
@@ -100,13 +103,11 @@ public class Server {
             return userName;
         }
 
-        // 메시지 전송 메서드
         public void sendMessage(String message) {
             out.println(message);
         }
     }
 
-    // 클라이언트 제거 메서드
     private static void removeClient(ClientHandler clientHandler) {
         synchronized (clients) {
             clients.remove(clientHandler);
