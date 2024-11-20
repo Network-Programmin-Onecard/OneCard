@@ -1,8 +1,6 @@
-package src;
 import java.io.*;
 import java.net.*;
 import java.util.function.Consumer;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
