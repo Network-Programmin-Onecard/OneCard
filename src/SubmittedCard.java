@@ -1,0 +1,40 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class SubmittedCard {
+    private List<Card> submittedCards;
+
+    public SubmittedCard() {
+        this.submittedCards = new ArrayList<>();
+    }
+
+    public void addCard(Card card) {
+        submittedCards.add(card);
+    }
+
+    public Card getTopCard() {
+        if (!submittedCards.isEmpty()) {
+            return submittedCards.get(submittedCards.size() - 1);
+        }
+        return null;
+    }
+
+    public List<Card> resetPile() {
+        if (submittedCards.size() <= 1) {
+            return new ArrayList<>();
+        }
+
+        List<Card> cardsToReturn = new ArrayList<>(submittedCards.subList(0, submittedCards.size() - 1));
+        Card topCard = getTopCard();
+        submittedCards.clear();
+        if (topCard != null) {
+            submittedCards.add(topCard);
+        }
+        return cardsToReturn;
+    }
+
+    public boolean canSubmit(Card card) {
+        if (submittedCards.isEmpty()) return true;
+        return card.matches(getTopCard());
+    }
+}
