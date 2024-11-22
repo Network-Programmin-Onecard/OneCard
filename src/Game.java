@@ -20,6 +20,16 @@ public class Game {
     }
 
     public void startGame() {
+
+        while (players.size() != 4) {
+            try {
+                Thread.sleep(1000); // 1초 대기
+            } catch (InterruptedException e) {
+                System.out.println("대기 중 오류 발생: " + e.getMessage());
+                Thread.currentThread().interrupt(); // 인터럽트 상태 복구
+                return;
+            }
+        }
         deck.shuffle();
 
         // 각 플레이어에게 5장의 카드를 나눠줌
@@ -50,6 +60,7 @@ public class Game {
             System.out.println("제출할 수 없는 카드입니다!");
         }
     }
+
 
     // 턴 전환 메서드 추가
     public void nextTurn() {
