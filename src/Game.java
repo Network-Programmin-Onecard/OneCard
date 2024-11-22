@@ -21,11 +21,15 @@ public class Game {
 
     public void startGame() {
 
-        if (players.size() != 4) {
-            System.out.println("게임을 시작하려면 정확히 4명의 플레이어가 필요합니다!");
-            return; // 게임 시작을 중단
-        }    
-
+        while (players.size() != 4) {
+            try {
+                Thread.sleep(1000); // 1초 대기
+            } catch (InterruptedException e) {
+                System.out.println("대기 중 오류 발생: " + e.getMessage());
+                Thread.currentThread().interrupt(); // 인터럽트 상태 복구
+                return;
+            }
+        }
         deck.shuffle();
 
         // 각 플레이어에게 5장의 카드를 나눠줌
