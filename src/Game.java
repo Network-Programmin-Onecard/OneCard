@@ -20,6 +20,12 @@ public class Game {
     }
 
     public void startGame() {
+
+        if (players.size() != 4) {
+            System.out.println("게임을 시작하려면 정확히 4명의 플레이어가 필요합니다!");
+            return; // 게임 시작을 중단
+        }    
+
         deck.shuffle();
 
         // 각 플레이어에게 5장의 카드를 나눠줌
