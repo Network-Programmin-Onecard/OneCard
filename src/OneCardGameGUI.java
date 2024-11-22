@@ -38,7 +38,7 @@ public class OneCardGameGUI extends JPanel {
         game.addPlayer("Player 1");
         game.addPlayer("Player 2");
         game.addPlayer("Player 3");
-        game.addPlayer("Player 4");
+        // game.addPlayer("Player 4");
         game.startGame();
 
         // 제출된 첫 번째 카드 버튼 텍스트 업데이트
