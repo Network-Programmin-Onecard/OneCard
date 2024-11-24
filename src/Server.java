@@ -7,37 +7,6 @@ public class Server {
     private static final int PORT = 30000;
     private static final int MAX_CLIENTS = 4;
 
-    public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("서버가 시작되었습니다. 포트 번호: " + PORT);
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-
-                synchronized (clients) {
-                    // 현재 접속 인원 체크
-                    if (clients.size() >= MAX_CLIENTS) {
-                        System.out.println("최대 접속 인원 초과: 새로운 클라이언트의 접속을 거부합니다.");
-                        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-                            out.println("서버에 접속할 수 없습니다. 최대 4명의 클라이언트만 접속 가능합니다.");
-                            // 메시지 전송 후 잠시 대기 (클라이언트가 메시지를 읽을 수 있도록)
-                            Thread.sleep(500);
-                        } catch (InterruptedException ignored) {}
-                        clientSocket.close();
-                        continue;
-                    }
-
-                    // 새 클라이언트 접속 허용
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
-                    clients.add(clientHandler);
-                    new Thread(clientHandler).start();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     // 연결된 사용자 목록 반환
     public static String getUserList() {
         StringBuilder userList = new StringBuilder("현재 접속한 사용자: ");
@@ -49,7 +18,7 @@ public class Server {
         return userList.toString();
     }
 
-    // 모든 클라이언트에게 사용자 목록 전송
+    // 모든 클라이언트에게 사용자 목록 전송 (모든 클라이언트에게 공통 정보 전송할 때 유용)
     public static void broadcastUserList() {
         String userList = getUserList();
         synchronized (clients) {
@@ -85,11 +54,6 @@ public class Server {
                 // 모든 클라이언트에게 업데이트된 사용자 목록 전송
                 broadcastUserList();
 
-                // 메시지 수신 대기
-                String message;
-                while ((message = in.readLine()) != null) {
-                    // 추가적인 메시지 처리가 필요하다면 여기에 작성
-                }
             } catch (IOException e) {
                 System.out.println(userName + "님이 연결을 종료하였습니다.");
             } finally {
@@ -113,5 +77,36 @@ public class Server {
             clients.remove(clientHandler);
         }
         System.out.println("현재 접속한 사용자 목록: " + getUserList());
+    }
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("서버가 시작되었습니다. 포트 번호: " + PORT);
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+
+                synchronized (clients) {
+                    // 현재 접속 인원 체크
+                    if (clients.size() >= MAX_CLIENTS) {
+                        System.out.println("최대 접속 인원 초과: 새로운 클라이언트의 접속을 거부합니다.");
+                        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+                            out.println("서버에 접속할 수 없습니다. 최대 4명의 클라이언트만 접속 가능합니다.");
+                            // 메시지 전송 후 잠시 대기 (클라이언트가 메시지를 읽을 수 있도록)
+                            Thread.sleep(500);
+                        } catch (InterruptedException ignored) {}
+                        clientSocket.close();
+                        continue;
+                    }
+
+                    // 새 클라이언트 접속 허용 -> 게임에 대한 정보 처리도 이와 같이 처리해야할 것으로 예상
+                    ClientHandler clientHandler = new ClientHandler(clientSocket);
+                    clients.add(clientHandler);
+                    new Thread(clientHandler).start();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

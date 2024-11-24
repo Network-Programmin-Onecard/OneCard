@@ -7,7 +7,7 @@ public class OneCardGame extends JFrame {
     private CardLayout cardLayout;
     private JPanel cardPanel;
     private StartPanel startPanel;
-    private GamePanel gamePanel;
+    private OneCardGameGUI gamePanel;
     private Client client;
 
     public OneCardGame() {
@@ -18,18 +18,12 @@ public class OneCardGame extends JFrame {
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        client = new Client(this::updateUserListInGamePanel);
+        client = new Client();
         startPanel = new StartPanel(new StartButtonListener());
         cardPanel.add(startPanel, "Start");
 
         add(cardPanel);
         setVisible(true);
-    }
-
-    public void updateUserListInGamePanel(String userList) {
-        if (gamePanel != null) {
-            gamePanel.updateUserList(userList);
-        }
     }
 
     private class StartButtonListener implements ActionListener {
@@ -45,17 +39,13 @@ public class OneCardGame extends JFrame {
             }
 
             // 서버에 연결 시도
+            client.setName(userName);
             boolean connected = client.connect(ip, Integer.parseInt(port), userName);
             System.out.println("Connected status: " + connected);
             if (connected) {
-                String userList = client.getUserList();
-                gamePanel = new GamePanel(userName, userList);
+                gamePanel = new OneCardGameGUI();
                 cardPanel.add(gamePanel, "Game");
                 cardLayout.show(cardPanel, "Game");
-            
-                // 게임 화면 생성 후 즉시 사용자 목록 업데이트
-                gamePanel.updateUserList(userList);
-                System.out.println("GamePanel created and userList updated: " + userList);
             }
         }
     }
