@@ -4,7 +4,7 @@ import java.util.List;
 public class Game {
     private Deck deck;
     private SubmittedCard submittedCard;
-    private List<Player> players;
+    private List<Client> players;
     private int currentPlayerIndex; // 현재 플레이어 인덱스
     private Card initialCard;
 
@@ -15,13 +15,13 @@ public class Game {
         currentPlayerIndex = 0; // 첫 번째 플레이어부터 시작
     }
 
-    public void addPlayer(String name) {
-        players.add(new Player(name));
-    }
+    // public void addPlayer(String name) {
+    //     players.add(new Player(name));
+    // }
 
     public void startGame() {
 
-        while (players.size() != 4) {
+        /*while (players.size() != 4) {
             try {
                 Thread.sleep(1000); // 1초 대기
             } catch (InterruptedException e) {
@@ -29,12 +29,12 @@ public class Game {
                 Thread.currentThread().interrupt(); // 인터럽트 상태 복구
                 return;
             }
-        }
+        }*/
         deck.shuffle();
 
         // 각 플레이어에게 5장의 카드를 나눠줌
         for (int i = 0; i < 5; i++) {
-            for (Player player : players) {
+            for (Client player : players) {
                 player.addCard(deck.dealCard());
             }
         }
@@ -48,7 +48,7 @@ public class Game {
     }
 
     public void playTurn(Card card) {
-        Player currentPlayer = players.get(currentPlayerIndex);
+        Client currentPlayer = players.get(currentPlayerIndex);
         if (submittedCard.canSubmit(card)) {
             submittedCard.addCard(card); // 카드를 제출된 카드에 추가
             currentPlayer.getHand().remove(card); // 플레이어의 손에서 카드 제거
@@ -67,13 +67,13 @@ public class Game {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
     }
 
-    public List<Player> getPlayers() {
+    public List<Client> getPlayers() {
         return players;
     }
 
-    public Player getCurrentPlayer() {
-        return players.get(currentPlayerIndex);
-    }
+    // public  getCurrentPlayer() {
+    //     return players.get(currentPlayerIndex);
+    // }
 
     public SubmittedCard getSubmittedCard() {
         return submittedCard;

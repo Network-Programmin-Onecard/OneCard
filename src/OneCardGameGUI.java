@@ -30,20 +30,20 @@ public class OneCardGameGUI extends JPanel {
 
         addCentralUI(); // UI 초기화
         initializeGame(); // 게임 로직 초기화
-        addPlayerCards();
-        addListeners();
+        // addPlayerCards();
+        // addListeners();
     }
 
     private void initializeGame() {
-        game.addPlayer("Player 1");
-        game.addPlayer("Player 2");
-        game.addPlayer("Player 3");
+        // game.addPlayer("Player 1");
+        // game.addPlayer("Player 2");
+        // game.addPlayer("Player 3");
         // game.addPlayer("Player 4");
         game.startGame();
 
         // 제출된 첫 번째 카드 버튼 텍스트 업데이트
         submittedCardButton.setText("" + game.getInitialCard());
-        refreshUI();
+        //refreshUI();
     }
 
     private void addCentralUI() {
@@ -61,91 +61,91 @@ public class OneCardGameGUI extends JPanel {
         this.add(oneCardButton);
     }
 
-    private void addPlayerCards() {
-        playerCardLabels = new JLabel[4];
-        playerCardButtons = new JButton[4][10];
-        int[][] coords = { { 50, 50 }, { 700, 50 }, { 50, 650 }, { 700, 650 } };
+     private void addPlayerCards() {
+         playerCardLabels = new JLabel[4];
+         playerCardButtons = new JButton[4][10];
+         int[][] coords = { { 50, 50 }, { 700, 50 }, { 50, 650 }, { 700, 650 } };
 
-        for (int i = 0; i < 4; i++) {
-            playerCardLabels[i] = new JLabel(game.getPlayers().get(i).getName());
-            playerCardLabels[i].setBounds(coords[i][0], coords[i][1] - 30, 200, 30);
-            this.add(playerCardLabels[i]);
+         for (int i = 0; i < 4; i++) {
+             playerCardLabels[i] = new JLabel(game.getPlayers().get(i).getName());
+             playerCardLabels[i].setBounds(coords[i][0], coords[i][1] - 30, 200, 30);
+             this.add(playerCardLabels[i]);
 
-            for (int j = 0; j < 10; j++) {
-                playerCardButtons[i][j] = new JButton();
-                playerCardButtons[i][j].setBounds(coords[i][0] + j * 90, coords[i][1], 80, 30);
-                this.add(playerCardButtons[i][j]);
-            }
-            updatePlayerCardButtons(i);
-        }
+             for (int j = 0; j < 10; j++) {
+                 playerCardButtons[i][j] = new JButton();
+                 playerCardButtons[i][j].setBounds(coords[i][0] + j * 90, coords[i][1], 80, 30);
+                 this.add(playerCardButtons[i][j]);
+             }
+             //updatePlayerCardButtons(i);
+         }
     }
 
-    private void updatePlayerCardButtons(int playerIndex) {
-        Player player = game.getPlayers().get(playerIndex);
-        List<Card> hand = player.getHand();
+     private void updatePlayerCardButtons(int playerIndex) {
+         Client player = game.getPlayers().get(playerIndex);
+         List<Card> hand = player.getHand();
 
-        for (int j = 0; j < 10; j++) {
-            JButton cardButton = playerCardButtons[playerIndex][j];
+         for (int j = 0; j < 10; j++) {
+             JButton cardButton = playerCardButtons[playerIndex][j];
 
-            // 카드가 있는 경우 버튼 활성화
-            if (j < hand.size()) {
-                Card card = hand.get(j);
+             // 카드가 있는 경우 버튼 활성화
+             if (j < hand.size()) {
+                 Card card = hand.get(j);
 
-                // 기존 리스너 제거
-                for (ActionListener al : cardButton.getActionListeners()) {
-                    cardButton.removeActionListener(al);
-                }
+                 // 기존 리스너 제거
+                 for (ActionListener al : cardButton.getActionListeners()) {
+                     cardButton.removeActionListener(al);
+                 }
 
-                cardButton.setText(card.getRank() + " " + card.getSuit());
-                cardButton.setVisible(true);
-                cardButton.setEnabled(player == game.getCurrentPlayer()); // 현재 플레이어만 활성화
-                cardButton.addActionListener(new CardPlayListener(player, card, cardButton));
-            } else {
-                // 카드가 없는 경우 버튼 비활성화
-                cardButton.setVisible(false);
-            }
-        }
-    }
+                 cardButton.setText(card.getRank() + " " + card.getSuit());
+                 cardButton.setVisible(true);
+                 //cardButton.setEnabled(player == game.getCurrentPlayer()); // 현재 플레이어만 활성화
+                 cardButton.addActionListener(new CardPlayListener(player, card, cardButton));
+             } else {
+                 // 카드가 없는 경우 버튼 비활성화
+             cardButton.setVisible(false);
+             }
+         }
+     }
 
-    private void addListeners() {
-        cardDeckButton.addActionListener(e -> {
-            Player currentPlayer = game.getCurrentPlayer(); // 현재 턴의 플레이어 가져오기
-            Card newCard = game.getDeck().dealCard(); // 덱에서 새 카드 가져오기
-            if (newCard != null) {
-                currentPlayer.addCard(newCard); // 현재 플레이어에게 새 카드 추가
-                // JOptionPane.showMessageDialog(this, currentPlayer.getName() + "가 새 카드를 가져왔습니다: " + newCard);
+     private void addListeners() {
+         cardDeckButton.addActionListener(e -> {
+             //Client currentPlayer = game.getCurrentPlayer(); // 현재 턴의 플레이어 가져오기
+             Card newCard = game.getDeck().dealCard(); // 덱에서 새 카드 가져오기
+             if (newCard != null) {
+                 //currentPlayer.addCard(newCard); // 현재 플레이어에게 새 카드 추가
+                 // JOptionPane.showMessageDialog(this, currentPlayer.getName() + "가 새 카드를 가져왔습니다: " + newCard);
         
-                // 턴 전환
-                game.nextTurn(); // 다음 플레이어로 전환
-                refreshUI(); // UI 업데이트
-            } else {
-                JOptionPane.showMessageDialog(this, "덱에 카드가 없습니다!");
-            }
-        });
+                 // 턴 전환
+                 game.nextTurn(); // 다음 플레이어로 전환
+                 refreshUI(); // UI 업데이트
+             } else {
+                 JOptionPane.showMessageDialog(this, "덱에 카드가 없습니다!");
+             }
+         });
         
 
-        oneCardButton.addActionListener(e -> {
-            for (Player player : game.getPlayers()) {
-                if (player != game.getCurrentPlayer() && player.getHand().size() == 1) {
-                    Card penaltyCard = game.getDeck().dealCard();
-                    if (penaltyCard != null) {
-                        player.addCard(penaltyCard);
-                        JOptionPane.showMessageDialog(this, player.getName() + "가 규칙 위반으로 패널티 카드를 받았습니다: " + penaltyCard);
-                        refreshUI();
-                    }
-                    return;
-                }
+         oneCardButton.addActionListener(e -> {
+             for (Client player : game.getPlayers()) {
+                //  if (player != game.getCurrentPlayer() && player.getHand().size() == 1) {
+                //      Card penaltyCard = game.getDeck().dealCard();
+                //      if (penaltyCard != null) {
+                //         player.addCard(penaltyCard);
+                //         JOptionPane.showMessageDialog(this, player.getName() + "가 규칙 위반으로 패널티 카드를 받았습니다: " + penaltyCard);
+                //         refreshUI();
+                //     }
+                //     return;
+                // }
             }
             JOptionPane.showMessageDialog(this, "규칙 위반이 감지되지 않았습니다.");
         });
     }
 
     private class CardPlayListener implements ActionListener {
-        private Player player;
+        private Client player;
         private Card card;
         private JButton cardButton;
 
-        public CardPlayListener(Player player, Card card, JButton cardButton) {
+        public CardPlayListener(Client player, Card card, JButton cardButton) {
             this.player = player;
             this.card = card;
             this.cardButton = cardButton;
@@ -153,10 +153,10 @@ public class OneCardGameGUI extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (player != game.getCurrentPlayer()) {
-                JOptionPane.showMessageDialog(OneCardGameGUI.this, "현재 당신의 차례가 아닙니다!");
-                return;
-            }
+            // if (player != game.getCurrentPlayer()) {
+            //     JOptionPane.showMessageDialog(OneCardGameGUI.this, "현재 당신의 차례가 아닙니다!");
+            //     return;
+            // }
 
             if (game.getSubmittedCard().canSubmit(card)) {
                 game.playTurn(card); // 카드 제출
