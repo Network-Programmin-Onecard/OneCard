@@ -1,73 +1,67 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
 import java.util.List;
 
 public class OneCardGameGUI extends JPanel {
-    private JButton submittedCardButton;
-    private JButton cardDeckButton;
-    private JButton oneCardButton;
-    private Game game;
-    private JLabel[] playerNameLabels;
-    private JLabel[] playerCardLabels;
-    private JButton[][] playerCardButtons;
-    private JLabel deckSizeLabel;
+    private JLabel gameStateLabel;
+    private JTextArea playerListArea;
+    private JPanel handPanel;
+    private Client client; // Client 참조 추가
 
-    public OneCardGameGUI() {
-        setLayout(null);
-
-        game = new Game();
-
-        // 중앙 UI를 먼저 초기화
-        submittedCardButton = new JButton(); // 초기화를 명시적으로 수행
-        cardDeckButton = new JButton("카드 뭉치");
-        oneCardButton = new JButton("원카드!");
-        oneCardButton.setEnabled(false); // 기본적으로 비활성화
-        playerNameLabels = new JLabel[4];
-        for (int i = 0; i < playerNameLabels.length; i++) {
-            playerNameLabels[i] = new JLabel("Player " + (i + 1));
-            playerNameLabels[i].setBounds(50 + i * 250, 10, 200, 30); // 적절한 위치 설정
-            add(playerNameLabels[i]);
-        }
-
-        deckSizeLabel = new JLabel("남은 카드: " + game.getDeck().size());
-        deckSizeLabel.setBounds(1100, 10, 150, 30);
-        add(deckSizeLabel);
-
-        addCentralUI(); // UI 초기화
-        initializeGame(); // 게임 로직 초기화
-        // addPlayerCards();
-        // addListeners();
+    
+    public OneCardGameGUI(Client client) {
+        this.client = client;
+        // 기본 레이아웃이나 초기화 코드 추가
+        setLayout(new BorderLayout());
+        gameStateLabel = new JLabel("게임 상태: 초기화 중");
+        gameStateLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(gameStateLabel, BorderLayout.NORTH);
+    
+        playerListArea = new JTextArea();
+        playerListArea.setEditable(false);
+        add(new JScrollPane(playerListArea), BorderLayout.WEST);
+    
+        handPanel = new JPanel();
+        handPanel.setLayout(new FlowLayout());
+        add(handPanel, BorderLayout.SOUTH);
+    
+        // revalidate();
+        // repaint();
     }
 
-    private void initializeGame() {
-
-    }
-
-    public void updatePlayerNames(String[] names) {
-        for (int i = 0; i < playerNameLabels.length; i++) {
-            if (i < names.length) {
-                playerNameLabels[i].setText(names[i]); // 사용자 이름 설정
-            } else {
-                playerNameLabels[i].setText(""); // 남은 라벨은 빈 문자열로 설정
+    public void updateHand(List<Card> hand) {
+        SwingUtilities.invokeLater(() -> {
+            handPanel.removeAll(); // 기존 카드 버튼 제거
+            for (Card card : hand) {
+                JButton cardButton = new JButton(card.toString());
+                cardButton.addActionListener(e -> {
+                    // 서버로 제출 요청 전송
+                    //Client client = getClientInstance(); // 클라이언트 인스턴스 가져오기
+                    if (client != null) {
+                        client.playCard(card); // 서버로 제출 요청
+                    }
+                });
+                handPanel.add(cardButton);
             }
-        }
-        repaint(); // UI 갱신
+            System.out.println("UI 갱신 완료, 남은 손패: " + hand); // 디버깅 로그 추가
+            handPanel.revalidate();
+            handPanel.repaint();
+        });
+    }
+    
+
+    public void updateGameState(String gameState) {
+        SwingUtilities.invokeLater(() -> {
+            gameStateLabel.setText("게임 상태: " + gameState);
+        });
     }
 
-    private void addCentralUI() {
-        int rectWidth = 500;
-        int rectHeight = 300;
-        int rectX = (1200 - rectWidth) / 2;
-        int rectY = (800 - rectHeight) / 2;
-
-        submittedCardButton.setBounds(rectX + 40, rectY + 40, 150, 200);
-        cardDeckButton.setBounds(rectX + rectWidth - 190, rectY + 40, 150, 200);
-        oneCardButton.setBounds(rectX + rectWidth / 2 - 50, rectY + rectHeight - 60, 100, 50);
-
-        this.add(submittedCardButton);
-        this.add(cardDeckButton);
-        this.add(oneCardButton);
+    public void updatePlayerList(String[] players) {
+        SwingUtilities.invokeLater(() -> {
+            playerListArea.setText(""); // 기존 내용 초기화
+            for (String player : players) {
+                playerListArea.append(player + "\n"); // 새로운 내용 추가
+            }
+        });
     }
 }

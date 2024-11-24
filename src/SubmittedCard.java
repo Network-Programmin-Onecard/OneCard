@@ -34,7 +34,7 @@ public class SubmittedCard {
     }
 
     public boolean canSubmit(Card card) {
-        if (submittedCards.isEmpty()) return true;
-        return card.matches(getTopCard());
+        Card topCard = getTopCard();
+        return card.getSuit().equals(topCard.getSuit()) || card.getRank().equals(topCard.getRank());
     }
 }
