@@ -20,10 +20,15 @@ public class Server {
 
     // 모든 클라이언트에게 사용자 목록 전송 (모든 클라이언트에게 공통 정보 전송할 때 유용)
     public static void broadcastUserList() {
-        String userList = getUserList();
         synchronized (clients) {
+            StringBuilder userList = new StringBuilder();
             for (ClientHandler client : clients) {
-                client.sendMessage(userList);
+                userList.append(client.getUserName()).append(","); // 사용자 이름 리스트 생성
+            }
+            String userListString = userList.toString();
+    
+            for (ClientHandler client : clients) {
+                client.sendMessage("USER_LIST:" + userListString); // 사용자 목록 전송
             }
         }
     }
@@ -49,10 +54,19 @@ public class Server {
                 System.out.println(userName + "님이 접속하였습니다.");
 
                 // 새로운 클라이언트에게 즉시 사용자 목록 전송
-                out.println(getUserList());
+                synchronized (clients){
+                    out.println(getUserList());
+                }
 
                 // 모든 클라이언트에게 업데이트된 사용자 목록 전송
                 broadcastUserList();
+
+                // 클라이언트 메시지 수신 대기 (추가 로직 가능)
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println(userName + "님이 보낸 메시지: " + message);
+                    // 추가 메시지 처리 로직 필요 시 여기에 구현
+                }
 
             } catch (IOException e) {
                 System.out.println(userName + "님이 연결을 종료하였습니다.");

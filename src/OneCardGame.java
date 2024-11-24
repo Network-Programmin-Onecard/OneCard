@@ -17,8 +17,6 @@ public class OneCardGame extends JFrame {
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-
-        client = new Client();
         startPanel = new StartPanel(new StartButtonListener());
         cardPanel.add(startPanel, "Start");
 
@@ -39,11 +37,12 @@ public class OneCardGame extends JFrame {
             }
 
             // 서버에 연결 시도
+            gamePanel = new OneCardGameGUI();
+            client = new Client(gamePanel);
             client.setName(userName);
             boolean connected = client.connect(ip, Integer.parseInt(port), userName);
             System.out.println("Connected status: " + connected);
             if (connected) {
-                gamePanel = new OneCardGameGUI();
                 cardPanel.add(gamePanel, "Game");
                 cardLayout.show(cardPanel, "Game");
             }
