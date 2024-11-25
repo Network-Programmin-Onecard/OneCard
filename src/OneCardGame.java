@@ -36,15 +36,21 @@ public class OneCardGame extends JFrame {
                 return;
             }
 
-            // 서버에 연결 시도
-            gamePanel = new OneCardGameGUI();
-            client = new Client(gamePanel);
-            client.setName(userName);
-            boolean connected = client.connect(ip, Integer.parseInt(port), userName);
-            System.out.println("Connected status: " + connected);
-            if (connected) {
-                cardPanel.add(gamePanel, "Game");
-                cardLayout.show(cardPanel, "Game");
+            try {
+                client = new Client(userName);
+                boolean connected = client.connect(ip, Integer.parseInt(port));
+    
+                if (connected) {
+                    gamePanel = new OneCardGameGUI(client); // Client 전달
+                    cardPanel.add(gamePanel, "Game");
+                    cardLayout.show(cardPanel, "Game");
+                    client.setGUI(gamePanel); // Client에 GUI 연결
+                } else {
+                    JOptionPane.showMessageDialog(null, "서버 연결에 실패했습니다.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "오류가 발생했습니다.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

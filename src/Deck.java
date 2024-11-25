@@ -30,6 +30,18 @@ public class Deck {
         return null;
     }
 
+    public List<Card> drawCards(int count) {
+        if (cards.size() < count) {
+            throw new IllegalStateException("덱에 카드가 부족합니다!");
+        }
+
+        List<Card> drawnCards = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            drawnCards.add(dealCard());
+        }
+        return drawnCards;
+    }
+
     public int size() {
         return cards.size();
     }
