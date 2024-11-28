@@ -10,7 +10,7 @@ public class Server {
     private final Game game;
 
     public Server() {
-        game = new Game(); // Game 객체 생성
+        game = new Game();
     }
 
     public static void main(String[] args) {
@@ -20,7 +20,7 @@ public class Server {
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("서버가 시작되었습니다. 포트 번호: " + PORT);
-
+    
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 synchronized (clients) {
@@ -28,15 +28,29 @@ public class Server {
                         rejectClient(clientSocket);
                         continue;
                     }
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
+    
+                    ClientHandler clientHandler = new ClientHandler(clientSocket, this, game);
                     clients.add(clientHandler);
                     new Thread(clientHandler).start();
+    
+                    // 모든 클라이언트가 연결되었을 때 게임 시작
+                    if (clients.size() == MAX_CLIENTS) {
+                        synchronized (game) {
+                            List<String> playerNames = new ArrayList<>();
+                            for (ClientHandler client : clients) {
+                                playerNames.add(client.getClientName());
+                            }
+                            game.startGame(playerNames); // 게임 초기화
+                        }
+                        broadcastGameState(); // 초기 게임 상태 전송
+                    }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
 
     private void rejectClient(Socket clientSocket) {
         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
@@ -45,119 +59,44 @@ public class Server {
         }
     }
 
-    private void broadcastGameState() {
-        StringBuilder state = new StringBuilder();
-        state.append("GAME_STATE: 현재 턴: ").append(game.getCurrentPlayer()).append("\n");
-        state.append("제출된 카드: ").append(game.getSubmittedCard().getTopCard()).append("\n");
-    
-        for (String player : game.getPlayers()) {
-            state.append(player).append(": ").append(game.getPlayerHand(player).size()).append("장\n");
+    public void broadcastGameState() {
+        StringBuilder state = new StringBuilder("GAME_STATE:");
+        synchronized (clients) {
+            int index = 0;
+            for (ClientHandler client : clients) {
+                String clientName = client.getClientName();
+                String serializedHand = client.serializeHand();
+                if (serializedHand == null || serializedHand.isEmpty()) {
+                    System.out.println("손패 데이터가 없습니다: " + clientName);
+                    continue;
+                }
+                state.append(index).append(",")
+                     .append(clientName).append(",")
+                     .append(serializedHand).append(";");
+                index++;
+            }
         }
+        String gameState = state.toString();
+        System.out.println("Broadcasting Game State: " + gameState); // 디버깅 출력
+        for (ClientHandler client : clients) {
+            client.sendMessage(gameState);
+        }
+    }
     
+
+    public void removeClient(ClientHandler clientHandler) {
+        synchronized (clients) {
+            clients.remove(clientHandler);
+        }
+        broadcastGameState();
+    }
+
+    public void broadcastMessage(String message) {
         synchronized (clients) {
             for (ClientHandler client : clients) {
-                client.sendMessage(state.toString());
-                client.sendHandUpdate(game.getPlayerHand(client.clientName)); // 각 클라이언트 손패 전송
+                client.sendMessage(message); // 각 클라이언트에 메시지 전송
             }
         }
     }
-
-    private class ClientHandler implements Runnable {
-        private final Socket socket;
-        private BufferedReader in;
-        private PrintWriter out;
-        private String clientName;
-
-        public ClientHandler(Socket socket) {
-            this.socket = socket;
-        }
-
-        @Override
-        public void run() {
-            try {
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
-
-                // 클라이언트 이름 수신 및 게임에 추가
-                clientName = in.readLine();
-                synchronized (game) {
-                    game.startGame(List.of(clientName)); // Game에 추가
-                }
-
-                broadcastGameState(); // 상태 브로드캐스트
-
-                // 클라이언트 요청 처리 루프
-                String input;
-                while ((input = in.readLine()) != null) {
-                    if (input.startsWith("PLAY_CARD")) {
-                        handlePlayCard(input);
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println(clientName + " 연결 종료");
-            } finally {
-                removeClient(this);
-            }
-        }
-
-        private void handlePlayCard(String input) {
-            String cardInfo = input.substring(10); // "PLAY_CARD " 이후 카드 정보 추출
-            try {
-                synchronized (game) {
-                    Card card = parseCard(cardInfo);
-                    boolean gameOver = game.playTurn(clientName, card);
-                    if (gameOver) {
-                        broadcastMessage(clientName + "가 승리했습니다!");
-                    } else {
-                        broadcastGameState(); // 상태 업데이트
-                    }
-                }
-            } catch (IllegalStateException e) {
-                sendMessage("ERROR: " + e.getMessage()); // 클라이언트에 에러 메시지 전달
-            }
-        }
-
-        private String serializeHand(List<Card> hand) {
-            StringBuilder sb = new StringBuilder();
-            for (Card card : hand) {
-                sb.append(card.getRank()).append(" ").append(card.getSuit()).append(",");
-            }
-            return sb.toString();
-        }
-
-        private Card parseCard(String cardInfo) {
-            String[] parts = cardInfo.split(" ");
-            return new Card(parts[0], parts[1], ""); // 이미지 경로는 불필요
-        }
-
-        private void removeClient(ClientHandler clientHandler) {
-            synchronized (clients) {
-                clients.remove(clientHandler);
-            }
-            synchronized (game) {
-                game.getPlayers().remove(clientName); // 게임에서도 제거
-            }
-            broadcastGameState();
-        }
-
-        public void sendMessage(String message) {
-            out.println(message);
-        }
-
-        private void broadcastMessage(String message) {
-            synchronized (clients) {
-                for (ClientHandler client : clients) {
-                    client.sendMessage(message);
-                }
-            }
-        }
-
-        public void sendHandUpdate(List<Card> hand) {
-            StringBuilder handMessage = new StringBuilder("HAND_UPDATE:");
-            for (Card card : hand) {
-                handMessage.append(card.getRank()).append(" ").append(card.getSuit()).append(",");
-            }
-            sendMessage(handMessage.toString());
-        }
-    }
+    
 }

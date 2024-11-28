@@ -7,26 +7,22 @@ public class OneCardGameGUI extends JPanel {
     private JTextArea playerListArea;
     private JPanel handPanel;
     private Client client; // Client 참조 추가
+    private JPanel topLeftPanel, topRightPanel, bottomLeftPanel, bottomRightPanel;
+    private OneCardGameGUI gui;
 
-    
+
     public OneCardGameGUI(Client client) {
         this.client = client;
-        // 기본 레이아웃이나 초기화 코드 추가
-        setLayout(new BorderLayout());
-        gameStateLabel = new JLabel("게임 상태: 초기화 중");
-        gameStateLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        add(gameStateLabel, BorderLayout.NORTH);
-    
-        playerListArea = new JTextArea();
-        playerListArea.setEditable(false);
-        add(new JScrollPane(playerListArea), BorderLayout.WEST);
-    
-        handPanel = new JPanel();
-        handPanel.setLayout(new FlowLayout());
-        add(handPanel, BorderLayout.SOUTH);
-    
-        // revalidate();
-        // repaint();
+        setLayout(new GridLayout(2, 2)); // 2x2 그리드로 설정
+        topLeftPanel = new JPanel(new BorderLayout());
+        topRightPanel = new JPanel(new BorderLayout());
+        bottomLeftPanel = new JPanel(new BorderLayout());
+        bottomRightPanel = new JPanel(new BorderLayout());
+
+        add(topLeftPanel); // 좌상
+        add(topRightPanel); // 우상
+        add(bottomLeftPanel); // 좌하
+        add(bottomRightPanel); // 우하
     }
 
     public void updateHand(List<Card> hand) {
@@ -36,7 +32,7 @@ public class OneCardGameGUI extends JPanel {
                 JButton cardButton = new JButton(card.toString());
                 cardButton.addActionListener(e -> {
                     // 서버로 제출 요청 전송
-                    //Client client = getClientInstance(); // 클라이언트 인스턴스 가져오기
+                    // Client client = getClientInstance(); // 클라이언트 인스턴스 가져오기
                     if (client != null) {
                         client.playCard(card); // 서버로 제출 요청
                     }
@@ -48,13 +44,21 @@ public class OneCardGameGUI extends JPanel {
             handPanel.repaint();
         });
     }
-    
 
-    public void updateGameState(String gameState) {
+    private void updateGameState(String gameState) {
+        String[] players = gameState.split(";"); // 각 플레이어 데이터를 분리
         SwingUtilities.invokeLater(() -> {
-            gameStateLabel.setText("게임 상태: " + gameState);
+            gui.clearPlayerPanels(); // 기존 데이터를 초기화
+            for (String playerData : players) {
+                String[] parts = playerData.split(",");
+                int position = Integer.parseInt(parts[0]); // 좌상, 우상, 좌하, 우하 위치
+                String playerName = parts[1]; // 플레이어 이름
+                List<Card> hand = client.parseHand(parts[2]); // 손패 파싱
+                gui.updatePlayerPanel(position, playerName, hand); // 패널 업데이트
+            }
         });
     }
+    
 
     public void updatePlayerList(String[] players) {
         SwingUtilities.invokeLater(() -> {
@@ -62,6 +66,49 @@ public class OneCardGameGUI extends JPanel {
             for (String player : players) {
                 playerListArea.append(player + "\n"); // 새로운 내용 추가
             }
+
         });
+    }
+
+    public void updatePlayerPanel(int position, String playerName, List<Card> hand) {
+        JPanel targetPanel;
+        switch (position) {
+            case 0 -> targetPanel = topLeftPanel;
+            case 1 -> targetPanel = topRightPanel;
+            case 2 -> targetPanel = bottomLeftPanel;
+            case 3 -> targetPanel = bottomRightPanel;
+            default -> throw new IllegalArgumentException("Invalid position: " + position);
+        }
+    
+        targetPanel.removeAll();
+    
+        JLabel nameLabel = new JLabel(playerName, SwingConstants.CENTER);
+        targetPanel.add(nameLabel, BorderLayout.NORTH);
+    
+        JPanel cardPanel = new JPanel(new FlowLayout());
+        for (Card card : hand) {
+            JButton cardButton = new JButton(card.toString());
+            cardPanel.add(cardButton);
+        }
+        targetPanel.add(cardPanel, BorderLayout.CENTER);
+    
+        targetPanel.revalidate();
+        targetPanel.repaint();
+    }
+
+    public void clearPlayerPanels() {
+        topLeftPanel.removeAll();
+        topRightPanel.removeAll();
+        bottomLeftPanel.removeAll();
+        bottomRightPanel.removeAll();
+    }
+
+    private JPanel createCardPanel(List<Card> hand) {
+        JPanel cardPanel = new JPanel(new FlowLayout());
+        for (Card card : hand) {
+            JButton cardButton = new JButton(card.toString());
+            cardPanel.add(cardButton);
+        }
+        return cardPanel;
     }
 }

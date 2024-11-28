@@ -21,6 +21,7 @@ public class Deck {
 
     public void shuffle() {
         Collections.shuffle(cards);
+        System.out.println("덱 셔플 완료: " + cards); // 디버깅
     }
 
     public Card dealCard() {
@@ -32,12 +33,14 @@ public class Deck {
 
     public List<Card> drawCards(int count) {
         if (cards.size() < count) {
-            throw new IllegalStateException("덱에 카드가 부족합니다!");
+            throw new IllegalStateException("덱에 카드가 부족합니다! 남은 카드 수: " + cards.size());
         }
-
+    
         List<Card> drawnCards = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            drawnCards.add(dealCard());
+            Card dealtCard = dealCard();
+            System.out.println("카드 분배됨: " + dealtCard); // 디버깅
+            drawnCards.add(dealtCard);
         }
         return drawnCards;
     }
