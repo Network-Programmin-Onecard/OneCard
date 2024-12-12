@@ -83,12 +83,16 @@ public class OneCardGameGUI extends JPanel {
         targetPanel.removeAll();
     
         JLabel nameLabel = new JLabel(playerName, SwingConstants.CENTER);
+        targetPanel.setLayout(new BorderLayout());
+
         targetPanel.add(nameLabel, BorderLayout.NORTH);
     
         JPanel cardPanel = new JPanel(new FlowLayout());
+        System.out.println("현재 들고 있는 패의 상태 : " + hand);
         for (Card card : hand) {
             JButton cardButton = new JButton(card.toString());
             cardPanel.add(cardButton);
+            System.out.println("생성된 카드 버튼 " + card);
         }
         targetPanel.add(cardPanel, BorderLayout.CENTER);
     
