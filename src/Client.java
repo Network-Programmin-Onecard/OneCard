@@ -72,7 +72,6 @@ public class Client {
     }
 
     public List<Card> parseHand(String handData) {
-        System.out.println("전달받은 패 확인 : " + handData );
         List<Card> hand = new ArrayList<>();
         String[] cards = handData.split(",");
         for (String card : cards) {
@@ -97,15 +96,7 @@ public class Client {
 
     // 게임 상태 업데이트
     private void updateGameState(String gameState) {
-        System.out.println("Received Game State: " + gameState); // 디버깅용 출력
         String[] players = gameState.split(";");
-
-
-        for (String a : players){ // 확인용 반복문
-            System.out.println("플레이어 : " +  a);
-        }                           //여기까지
-
-
         SwingUtilities.invokeLater(() -> {
             gui.clearPlayerPanels();
             for (String playerData : players) {
@@ -121,15 +112,10 @@ public class Client {
                 String CardString = String.join(",", Arrays.copyOfRange(parts, 2, parts.length));
 
                 List<Card> hand = parseHand(CardString);
-                System.out.print(hand);
-
-
                 gui.updatePlayerPanel(position, playerName, hand);
             }
         });
     }
-    
-    
 
     // 사용자 목록 업데이트
     private void updateUserList(String[] users) {
