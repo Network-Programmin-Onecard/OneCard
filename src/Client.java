@@ -72,6 +72,7 @@ public class Client {
     }
 
     public List<Card> parseHand(String handData) {
+        System.out.println("전달받은 패 확인 : " + handData );
         List<Card> hand = new ArrayList<>();
         String[] cards = handData.split(",");
         for (String card : cards) {
@@ -98,6 +99,13 @@ public class Client {
     private void updateGameState(String gameState) {
         System.out.println("Received Game State: " + gameState); // 디버깅용 출력
         String[] players = gameState.split(";");
+
+
+        for (String a : players){ // 확인용 반복문
+            System.out.println("플레이어 : " +  a);
+        }                           //여기까지
+
+
         SwingUtilities.invokeLater(() -> {
             gui.clearPlayerPanels();
             for (String playerData : players) {
@@ -106,9 +114,16 @@ public class Client {
                     System.out.println("Invalid player data: " + playerData);
                     continue;
                 }
+                System.out.println("플레이어 별 데이터 : " + playerData);
                 int position = Integer.parseInt(parts[0]);
                 String playerName = parts[1];
-                List<Card> hand = parseHand(parts[2]);
+                
+                String CardString = String.join(",", Arrays.copyOfRange(parts, 2, parts.length));
+
+                List<Card> hand = parseHand(CardString);
+                System.out.print(hand);
+
+
                 gui.updatePlayerPanel(position, playerName, hand);
             }
         });
