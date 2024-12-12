@@ -21,7 +21,7 @@ public class Deck {
 
     public void shuffle() {
         Collections.shuffle(cards);
-        System.out.println("덱 셔플 완료: " + cards); // 디버깅
+        System.out.println("덱 셔플 완료: "); // 디버깅
     }
 
     public Card dealCard() {
@@ -39,7 +39,6 @@ public class Deck {
         List<Card> drawnCards = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             Card dealtCard = dealCard();
-            System.out.println("카드 분배됨: " + dealtCard); // 디버깅
             drawnCards.add(dealtCard);
         }
         return drawnCards;
