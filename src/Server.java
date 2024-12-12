@@ -35,16 +35,24 @@ public class Server {
     
                     // 모든 클라이언트가 연결되었을 때 게임 시작
                     if (clients.size() == MAX_CLIENTS) {
-                        synchronized (game) {
-                            List<String> playerNames = new ArrayList<>();
-                            for (ClientHandler client : clients) {
-                                playerNames.add(client.getClientName());
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(100); // 1초 대기
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
-                            game.startGame(playerNames); // 게임 초기화
-                        }
-                        broadcastGameState(); // 초기 게임 상태 전송
+                    
+                            synchronized (game) {
+                                List<String> playerNames = new ArrayList<>();
+                                for (ClientHandler client : clients) {
+                                    playerNames.add(client.getClientName());
+                                }
+                                game.startGame(playerNames); // 게임 초기화
+                            }
+                            broadcastGameState(); // 초기 게임 상태 전송
+                        }).start();
+                       }
                     }
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();
