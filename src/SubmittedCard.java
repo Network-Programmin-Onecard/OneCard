@@ -35,6 +35,10 @@ public class SubmittedCard {
 
     public boolean canSubmit(Card card) {
         Card topCard = getTopCard();
+        if (topCard == null) {
+            return true; // 첫 번째 카드는 항상 제출 가능
+        }
         return card.getSuit().equals(topCard.getSuit()) || card.getRank().equals(topCard.getRank());
     }
+    
 }

@@ -51,22 +51,11 @@ public class Client {
         try {
             String message;
             while ((message = in.readLine()) != null) {
-                if (message.startsWith("PLAY_SUCCESS:")) {
-                    String cardInfo = message.substring(13); // "PLAY_SUCCESS:" 이후 카드 정보
-                    Card playedCard = parseCard(cardInfo); // 카드 객체로 변환
-                    hand.remove(playedCard); // 손패에서 제거
-                    SwingUtilities.invokeLater(() -> {
-                        System.out.println("PLAY_SUCCESS 처리 완료: " + hand); // 디버깅 로그
-                        gui.updateHand(hand); // UI 갱신
-                    });
-                } else if (message.startsWith("HAND_UPDATE:")) {
-                    List<Card> updatedHand = parseHand(message.substring(12));
-                    updateHand(updatedHand); // 서버에서 받은 손패로 갱신
-                } else if (message.startsWith("GAME_STATE:")) {
-                    String gameState = message.substring(11);
-                    updateGameState(gameState); // 게임 상태 갱신
+                if (message.startsWith("GAME_STATE:")) {
+                    String gameState = message.substring(11); // 상태 데이터
+                    updateGameState(gameState);
                 } else if (message.startsWith("ERROR:")) {
-                    System.out.println("제출 실패: " + message.substring(6)); // 에러 메시지 출력
+                    System.out.println("오류 메시지: " + message.substring(6));
                 } else {
                     System.out.println("서버 메시지: " + message);
                 }
@@ -82,7 +71,7 @@ public class Client {
         return new Card(parts[0], parts[1], ""); // 이미지 경로는 필요 없으므로 빈 문자열
     }
 
-    private List<Card> parseHand(String handData) {
+    public List<Card> parseHand(String handData) {
         List<Card> hand = new ArrayList<>();
         String[] cards = handData.split(",");
         for (String card : cards) {
@@ -107,10 +96,25 @@ public class Client {
 
     // 게임 상태 업데이트
     private void updateGameState(String gameState) {
+        System.out.println("Received Game State: " + gameState); // 디버깅용 출력
+        String[] players = gameState.split(";");
         SwingUtilities.invokeLater(() -> {
-            gui.updateGameState(gameState); // GUI에서 게임 상태 업데이트
+            gui.clearPlayerPanels();
+            for (String playerData : players) {
+                String[] parts = playerData.split(",");
+                if (parts.length < 3) {
+                    System.out.println("Invalid player data: " + playerData);
+                    continue;
+                }
+                int position = Integer.parseInt(parts[0]);
+                String playerName = parts[1];
+                List<Card> hand = parseHand(parts[2]);
+                gui.updatePlayerPanel(position, playerName, hand);
+            }
         });
     }
+    
+    
 
     // 사용자 목록 업데이트
     private void updateUserList(String[] users) {
