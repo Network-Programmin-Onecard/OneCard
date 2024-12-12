@@ -8,22 +8,51 @@ public class OneCardGameGUI extends JPanel {
     private JPanel handPanel;
     private Client client; // Client 참조 추가
     private JPanel topLeftPanel, topRightPanel, bottomLeftPanel, bottomRightPanel;
+    private JPanel centralPanel; // 중앙 패널 참조 추가
+    private JLayeredPane layeredPane;
     private OneCardGameGUI gui;
 
 
     public OneCardGameGUI(Client client) {
         this.client = client;
-        setLayout(new GridLayout(2, 2)); // 2x2 그리드로 설정
-        topLeftPanel = new JPanel(new BorderLayout());
-        topRightPanel = new JPanel(new BorderLayout());
-        bottomLeftPanel = new JPanel(new BorderLayout());
-        bottomRightPanel = new JPanel(new BorderLayout());
+        setLayout(null); // null 레이아웃 설정
 
-        add(topLeftPanel); // 좌상
-        add(topRightPanel); // 우상
-        add(bottomLeftPanel); // 좌하
-        add(bottomRightPanel); // 우하
+         // JLayeredPane 생성
+         layeredPane = new JLayeredPane();
+         layeredPane.setBounds(0, 0, 1200, 800);
+
+        // 각 코너 패널 추가
+        topLeftPanel = createPanel("Top Left", Color.RED, 0, 0, 600, 400);
+        layeredPane.add(topLeftPanel, JLayeredPane.DEFAULT_LAYER);
+
+        topRightPanel = createPanel("Top Right", Color.GREEN, 600, 0, 600, 400);
+        layeredPane.add(topRightPanel, JLayeredPane.DEFAULT_LAYER);
+
+        bottomLeftPanel = createPanel("Bottom Left", Color.BLUE, 0, 400, 600, 400);
+        layeredPane.add(bottomLeftPanel, JLayeredPane.DEFAULT_LAYER);
+
+        bottomRightPanel = createPanel("Bottom Right", Color.YELLOW, 600, 400, 600, 400);
+        layeredPane.add(bottomRightPanel, JLayeredPane.DEFAULT_LAYER);
+
+        createCentralPanel();
+        layeredPane.add(centralPanel, JLayeredPane.PALETTE_LAYER); // 항상 최상단에 위치
+
+        // 레이아웃에 추가
+        add(layeredPane);
     }
+
+    private JPanel createPanel(String text, Color color, int x, int y, int width, int height) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setBounds(x, y, width, height);
+        panel.setBackground(color);
+
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        panel.add(label, BorderLayout.CENTER);
+
+        return panel;
+    }
+
 
     public void updateHand(List<Card> hand) {
         SwingUtilities.invokeLater(() -> {
@@ -44,21 +73,6 @@ public class OneCardGameGUI extends JPanel {
             handPanel.repaint();
         });
     }
-
-    private void updateGameState(String gameState) {
-        String[] players = gameState.split(";"); // 각 플레이어 데이터를 분리
-        SwingUtilities.invokeLater(() -> {
-            gui.clearPlayerPanels(); // 기존 데이터를 초기화
-            for (String playerData : players) {
-                String[] parts = playerData.split(",");
-                int position = Integer.parseInt(parts[0]); // 좌상, 우상, 좌하, 우하 위치
-                String playerName = parts[1]; // 플레이어 이름
-                List<Card> hand = client.parseHand(parts[2]); // 손패 파싱
-                gui.updatePlayerPanel(position, playerName, hand); // 패널 업데이트
-            }
-        });
-    }
-    
 
     public void updatePlayerList(String[] players) {
         SwingUtilities.invokeLater(() -> {
@@ -96,6 +110,24 @@ public class OneCardGameGUI extends JPanel {
     
         targetPanel.revalidate();
         targetPanel.repaint();
+    }
+
+    private void createCentralPanel() {
+        // 중앙 패널 생성
+        centralPanel = new JPanel();
+        centralPanel.setLayout(null); // 자유 배치
+        centralPanel.setBounds(350, 250, 500, 300); // 화면 중앙 위치 지정
+        centralPanel.setBackground(Color.LIGHT_GRAY);
+
+        // Submitted Card 버튼 추가
+        JButton submittedCardButton = new JButton("Submitted Card");
+        submittedCardButton.setBounds(50, 50, 150, 100);
+        centralPanel.add(submittedCardButton);
+
+        // Card Deck 버튼 추가
+        JButton cardDeckButton = new JButton("Card Deck");
+        cardDeckButton.setBounds(300, 50, 150, 100);
+        centralPanel.add(cardDeckButton);
     }
 
     public void clearPlayerPanels() {
