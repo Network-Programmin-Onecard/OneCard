@@ -2,6 +2,7 @@ import java.util.*;
 
 public class Game {
     private final Map<String, List<Card>> playerHands = new HashMap<>();
+    private List<Card> suffledDeck = new ArrayList<>();
 
     public void addPlayer(String playerName) {
         playerHands.put(playerName, new ArrayList<>()); // 빈 손패로 초기화
@@ -9,6 +10,10 @@ public class Game {
 
     public List<Card> getPlayerHand(String playerName) {
         return playerHands.getOrDefault(playerName, new ArrayList<>());
+    }
+
+    public List<Card> getSuffledDeck() {
+        return suffledDeck;
     }
 
     public boolean playTurn(String playerName, Card card) {
@@ -36,7 +41,7 @@ public class Game {
         playerHands.remove(playerName);
     }
 
-    public void startGame(List<String> clientNames) {
+    public synchronized void startGame(List<String> clientNames) {
         Deck deck = new Deck(); // 새로운 덱 생성
         deck.shuffle(); // 덱 셔플
     
@@ -44,6 +49,10 @@ public class Game {
             List<Card> hand = new ArrayList<>(deck.drawCards(8)); // 각 플레이어에게 8장 배분
             playerHands.put(clientName, hand); // 플레이어 손패 저장
         }
+
+        synchronized (suffledDeck) {    // 동기화 문제 해결을 위한 작업
+            suffledDeck.clear();
+            suffledDeck.addAll(deck.getCards());
+        }
     }
-    
 }

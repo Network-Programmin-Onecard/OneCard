@@ -54,6 +54,9 @@ public class Client {
                 if (message.startsWith("GAME_STATE:")) {
                     String gameState = message.substring(11); // 상태 데이터
                     updateGameState(gameState);
+                } else if (message.startsWith("REMAINING_CARDS:")) {
+                    String remainingCards = message.substring(16); // 남은 카드 데이터
+                    updateRemainingCards(remainingCards); // 남은 카드 갱신
                 } else if (message.startsWith("ERROR:")) {
                     System.out.println("오류 메시지: " + message.substring(6));
                 } else {
@@ -64,11 +67,15 @@ public class Client {
             e.printStackTrace();
         }
     }
-    
 
-    private Card parseCard(String cardInfo) {
-        String[] parts = cardInfo.split(" ");
-        return new Card(parts[0], parts[1], ""); // 이미지 경로는 필요 없으므로 빈 문자열
+    private void updateRemainingCards(String remainingCards) {
+        String[] parts = remainingCards.split(",");
+        String submittedCard = parts[0];
+        String cardDeckTop = parts.length > 1 ? parts[1] : "Empty";
+    
+        SwingUtilities.invokeLater(() -> {
+            gui.updateRemainingCards(submittedCard, cardDeckTop);
+        });
     }
 
     public List<Card> parseHand(String handData) {
@@ -108,19 +115,12 @@ public class Client {
                 System.out.println("플레이어 별 데이터 : " + playerData);
                 int position = Integer.parseInt(parts[0]);
                 String playerName = parts[1];
-                
+
                 String CardString = String.join(",", Arrays.copyOfRange(parts, 2, parts.length));
 
                 List<Card> hand = parseHand(CardString);
                 gui.updatePlayerPanel(position, playerName, hand);
             }
-        });
-    }
-
-    // 사용자 목록 업데이트
-    private void updateUserList(String[] users) {
-        SwingUtilities.invokeLater(() -> {
-            gui.updatePlayerList(users); // GUI에서 사용자 목록 업데이트
         });
     }
 
@@ -161,5 +161,4 @@ public class Client {
             e.printStackTrace();
         }
     }
-
 }

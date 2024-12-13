@@ -5,7 +5,6 @@ import java.util.*;
 public class Server {
     private static final int PORT = 30000;
     private static final int MAX_CLIENTS = 4;
-
     private final List<ClientHandler> clients = new ArrayList<>();
     private final Game game;
 
@@ -59,7 +58,6 @@ public class Server {
         }
     }
     
-
     private void rejectClient(Socket clientSocket) {
         try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
             out.println("접속할 수 없습니다. 최대 접속 인원 초과.");
@@ -68,6 +66,7 @@ public class Server {
     }
 
     public void broadcastGameState() {
+        // GAME_STATE 메시지 생성 및 전송
         StringBuilder state = new StringBuilder("GAME_STATE:");
         synchronized (clients) {
             int index = 0;
@@ -84,13 +83,27 @@ public class Server {
                 index++;
             }
         }
+    
         String gameState = state.toString();
         System.out.println("Broadcasting Game State: " + gameState); // 디버깅 출력
         for (ClientHandler client : clients) {
-            client.sendMessage(gameState);
+            client.sendMessage(gameState); // GAME_STATE 메시지 전송
+        }
+    
+        // REMAINING_CARDS 메시지 생성 및 전송
+        synchronized (game) {
+            List<Card> remainingDeck = game.getSuffledDeck(); // 남은 카드 가져오기
+            if (!remainingDeck.isEmpty()) {
+                String submittedCard = remainingDeck.get(0).toString();
+                String cardDeckTop = remainingDeck.size() > 1 ? remainingDeck.get(1).toString() : "Empty";
+                String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
+                System.out.println("Broadcasting Remaining Cards: " + remainingCardsMessage); // 디버깅 출력
+                for (ClientHandler client : clients) {
+                    client.sendMessage(remainingCardsMessage); // REMAINING_CARDS 메시지 전송
+                }
+            }
         }
     }
-    
 
     public void removeClient(ClientHandler clientHandler) {
         synchronized (clients) {
