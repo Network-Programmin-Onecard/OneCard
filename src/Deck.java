@@ -11,14 +11,12 @@ public class Deck {
 
     public Deck() {
         cards = new ArrayList<>();
-        String[] suits = { "Spades", "Hearts", "Clubs", "Diamonds" };
+        String[] suits = { "Spade", "Heart", "Clover", "Diamond" };
         String[] ranks = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" };
-        String imagePath;
 
         for (String suit : suits) {
             for (String rank : ranks) {
-                imagePath = suit + "/" + rank;
-                cards.add(new Card(rank, suit, imagePath));
+                cards.add(new Card(rank, suit));
             }
         }
     }

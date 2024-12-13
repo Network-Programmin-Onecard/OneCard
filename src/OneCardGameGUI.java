@@ -19,16 +19,15 @@ public class OneCardGameGUI extends JPanel {
         layeredPane.setBounds(0, 0, 1200, 800);
 
         // 각 코너 패널 추가
-        topLeftPanel = createPanel(Color.RED, 0, 0, 600, 400);
+        topLeftPanel = createPanel(new Color(255, 182, 193), 0, 0, 600, 400);
         layeredPane.add(topLeftPanel, JLayeredPane.DEFAULT_LAYER);
-
-        topRightPanel = createPanel(Color.GREEN, 600, 0, 600, 400);
+        topRightPanel = createPanel(new Color(230, 230, 250), 600, 0, 600, 400);
         layeredPane.add(topRightPanel, JLayeredPane.DEFAULT_LAYER);
 
-        bottomLeftPanel = createPanel(Color.BLUE, 0, 400, 600, 400);
+        bottomLeftPanel = createPanel(new Color(173, 216, 230), 0, 400, 600, 400);
         layeredPane.add(bottomLeftPanel, JLayeredPane.DEFAULT_LAYER);
 
-        bottomRightPanel = createPanel(Color.YELLOW, 600, 400, 600, 400);
+        bottomRightPanel = createPanel(new Color(255, 250, 205), 600, 400, 600, 400);
         layeredPane.add(bottomRightPanel, JLayeredPane.DEFAULT_LAYER);
 
         createCentralPanel();
@@ -118,10 +117,14 @@ public class OneCardGameGUI extends JPanel {
         int startY = targetPanel.getHeight() / 2 - cardHeight / 2 + yOffset; // y 위치 조정
         int overlap = 30; // 가로 간격 (겹침 효과)
         for (int i = 0; i < hand.size(); i++) {
-            JButton cardButton = new JButton(hand.get(i).toString());
+            Card card = hand.get(i);
+            // 카드 버튼 생성
+            RoundedButton cardButton = new RoundedButton("");
+            cardButton.setIcon(loadCardImage(card));
             cardButton.setBounds(startX + (overlap * i), startY, cardWidth, cardHeight); // x 위치만 겹침 효과 적용
-            cardButton.setBackground(Color.WHITE); // 카드 버튼의 배경색
-            cardButton.setBorder(BorderFactory.createLineBorder(Color.BLACK)); // 카드 테두리
+            // 버튼 스타일링
+            cardButton.setBorderPainted(false); // 테두리 렌더링 비활성화
+            cardButton.setFocusPainted(false); // 포커스 윤곽선 제거
             targetPanel.add(cardButton);
         }
         // **닉네임** 위치: 지정된 자표 사용
@@ -138,14 +141,30 @@ public class OneCardGameGUI extends JPanel {
         targetPanel.repaint();
     }
 
-    public void updateRemainingCards(String submittedCard, String cardDeckTop) {
+    public void updateRemainingCards(Card submittedCard, Card cardDeckTop) {
         Component[] components = centralPanel.getComponents();
         for (Component comp : components) {
-            if (comp instanceof JButton button) {
+            if (comp instanceof RoundedButton button) {
                 if ("Submitted Card".equals(button.getText())) {
-                    button.setText(submittedCard); // Submitted Card 업데이트
+                    button.setText(""); // 기존 텍스트 제거
+                    if (submittedCard != null) {
+                        ImageIcon cardImage = loadCardImage(submittedCard); // 카드 이미지 로드
+                        button.setIcon(resizeImage(cardImage, button.getWidth(), button.getHeight())); // 크기 조정
+                        // 버튼 스타일링
+                        button.setBorderPainted(false); // 테두리 렌더링 비활성화
+                        button.setContentAreaFilled(false); // 배경 투명화
+                        button.setFocusPainted(false); // 포커스 윤곽선 제거
+                    }
                 } else if ("Card Deck".equals(button.getText())) {
-                    button.setText(cardDeckTop); // Card Deck 업데이트
+                    button.setText(""); // 기존 텍스트 제거
+                    if (cardDeckTop != null) {
+                        ImageIcon cardImage = loadCardImage(cardDeckTop); // 카드 이미지 로드
+                        button.setIcon(resizeImage(cardImage, button.getWidth(), button.getHeight())); // 크기 조정
+                        // 버튼 스타일링
+                        button.setBorderPainted(false); // 테두리 렌더링 비활성화
+                        button.setContentAreaFilled(false); // 배경 투명화
+                        button.setFocusPainted(false); // 포커스 윤곽선 제거
+                    }
                 }
             }
         }
@@ -153,20 +172,28 @@ public class OneCardGameGUI extends JPanel {
         centralPanel.repaint();
     }
 
+    private ImageIcon resizeImage(ImageIcon icon, int width, int height) {
+        Image img = icon.getImage();
+        Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImg);
+    }
+
     private void createCentralPanel() {
         centralPanel = new JPanel();
         centralPanel.setLayout(null); // 자유 배치
         centralPanel.setBounds(400, 280, 400, 240);
-        centralPanel.setBackground(Color.LIGHT_GRAY);
+        centralPanel.setBackground(new Color(144, 238, 144));
 
         // Submitted Card 버튼 추가
-        JButton submittedCardButton = new JButton("Submitted Card");
+        RoundedButton submittedCardButton = new RoundedButton("Submitted Card");
         submittedCardButton.setBounds(50, 45, 100, 150); // 위치 및 크기 조정
+        submittedCardButton.setRoundness(20, 20); // 둥근 모서리 설정
         centralPanel.add(submittedCardButton);
 
         // Card Deck 버튼 추가
-        JButton cardDeckButton = new JButton("Card Deck");
+        RoundedButton cardDeckButton = new RoundedButton("Card Deck");
         cardDeckButton.setBounds(250, 45, 100, 150); // 위치 및 크기 조정
+        cardDeckButton.setRoundness(20, 20); // 둥근 모서리 설정
         centralPanel.add(cardDeckButton);
     }
 
@@ -175,5 +202,14 @@ public class OneCardGameGUI extends JPanel {
         topRightPanel.removeAll();
         bottomLeftPanel.removeAll();
         bottomRightPanel.removeAll();
+    }
+
+    private ImageIcon loadCardImage(Card card) {
+        String rank = card.getRank();
+        String suit = card.getSuit();
+        String imagePath = "resources/" + suit.toLowerCase() + "/" + rank + ".png"; // 경로 생성
+        ImageIcon icon = new ImageIcon(imagePath);
+        Image img = icon.getImage().getScaledInstance(80, 120, Image.SCALE_SMOOTH); // 크기 조정
+        return new ImageIcon(img);
     }
 }
