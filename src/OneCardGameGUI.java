@@ -87,22 +87,26 @@ public class OneCardGameGUI extends JPanel {
             case 0 -> { // Top Left Panel
                 targetPanel = topLeftPanel;
                 yOffset = -80; // 상단 패널: y 위치를 더 위로
-                nameX = 200; nameY = 280;
+                nameX = 200;
+                nameY = 280;
             }
             case 1 -> { // Top Right Panel
                 targetPanel = topRightPanel;
                 yOffset = -80; // 상단 패널: y 위치를 더 위로
-                nameX = 1000; nameY = 280;
+                nameX = 400;
+                nameY = 280;
             }
             case 2 -> { // Bottom Left Panel
                 targetPanel = bottomLeftPanel;
                 yOffset = 50; // 하단 패널: y 위치를 더 아래로
-                nameX = 200; nameY = 520;
+                nameX = 200;
+                nameY = 60;
             }
             case 3 -> { // Bottom Right Panel
                 targetPanel = bottomRightPanel;
                 yOffset = 50; // 하단 패널: y 위치를 더 아래로
-                nameX = 1000; nameY = 520;
+                nameX = 400;
+                nameY = 60;
             }
             default -> throw new IllegalArgumentException("Invalid position: " + position);
         }
@@ -115,7 +119,6 @@ public class OneCardGameGUI extends JPanel {
         int startX = 20; // 카드의 x 시작 위치
         int startY = targetPanel.getHeight() / 2 - cardHeight / 2 + yOffset; // y 위치 조정
         int overlap = 30; // 가로 간격 (겹침 효과)
-
         for (int i = 0; i < hand.size(); i++) {
             JButton cardButton = new JButton(hand.get(i).toString());
             cardButton.setBounds(startX + (overlap * i), startY, cardWidth, cardHeight); // x 위치만 겹침 효과 적용
@@ -123,7 +126,6 @@ public class OneCardGameGUI extends JPanel {
             cardButton.setBorder(BorderFactory.createLineBorder(Color.BLACK)); // 카드 테두리
             targetPanel.add(cardButton);
         }
-
         // **닉네임** 위치: 지정된 자표 사용
         JLabel nameLabel = new JLabel(playerName, SwingConstants.CENTER);
         nameLabel.setBounds(nameX - 50, nameY, 100, 20); // 닉네임의 너비 100px로 중앙 정렬
