@@ -71,6 +71,6 @@ public class ClientHandler implements Runnable {
 
     private Card parseCard(String cardInfo) {
         String[] parts = cardInfo.split(" ");
-        return new Card(parts[0], parts[1], "");
+        return new Card(parts[0], parts[1]);
     }
 }

@@ -70,12 +70,20 @@ public class Client {
 
     private void updateRemainingCards(String remainingCards) {
         String[] parts = remainingCards.split(",");
-        String submittedCard = parts[0];
-        String cardDeckTop = parts.length > 1 ? parts[1] : "Empty";
+        
+        // String 데이터를 Card 객체로 변환
+        Card submittedCard = parseCard(parts[0]); // 첫 번째 카드
+        Card cardDeckTop = parts.length > 1 ? parseCard(parts[1]) : null; // 두 번째 카드 (없으면 null)
     
-        SwingUtilities.invokeLater(() -> {
-            gui.updateRemainingCards(submittedCard, cardDeckTop);
-        });
+        gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
+    }
+
+    private Card parseCard(String cardString) {
+        String[] parts = cardString.split("-");
+        if (parts.length != 2) {
+            return null; // 잘못된 형식 처리
+        }
+        return new Card(parts[0], parts[1]); // Rank와 Suit로 카드 객체 생성
     }
 
     public List<Card> parseHand(String handData) {
@@ -84,7 +92,7 @@ public class Client {
         for (String card : cards) {
             String[] parts = card.split(" ");
             if (parts.length == 2) {
-                hand.add(new Card(parts[0], parts[1], "")); // 이미지 경로는 필요 없으므로 빈 문자열
+                hand.add(new Card(parts[0], parts[1]));
             }
         }
         return hand;
@@ -95,10 +103,8 @@ public class Client {
         this.hand.clear(); // 기존 손패 비우기
         this.hand.addAll(newHand); // 새 손패 추가
 
-        SwingUtilities.invokeLater(() -> {
-            System.out.println("UI 갱신: " + hand); // 디버깅 로그 추가
-            gui.updateHand(hand); // GUI 갱신
-        });
+        System.out.println("UI 갱신: " + hand); // 디버깅 로그 추가
+        gui.updateHand(hand); // GUI 갱신
     }
 
     // 게임 상태 업데이트
