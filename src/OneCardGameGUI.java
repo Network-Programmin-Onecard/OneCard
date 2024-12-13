@@ -3,14 +3,12 @@ import javax.swing.*;
 import java.util.List;
 
 public class OneCardGameGUI extends JPanel {
-    private JLabel gameStateLabel;
     private JTextArea playerListArea;
     private JPanel handPanel;
     private Client client; // Client 참조 추가
     private JPanel topLeftPanel, topRightPanel, bottomLeftPanel, bottomRightPanel;
     private JPanel centralPanel; // 중앙 패널 참조 추가
     private JLayeredPane layeredPane;
-    private OneCardGameGUI gui;
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -140,6 +138,21 @@ public class OneCardGameGUI extends JPanel {
         targetPanel.repaint();
     }
 
+    public void updateRemainingCards(String submittedCard, String cardDeckTop) {
+        Component[] components = centralPanel.getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JButton button) {
+                if ("Submitted Card".equals(button.getText())) {
+                    button.setText(submittedCard); // Submitted Card 업데이트
+                } else if ("Card Deck".equals(button.getText())) {
+                    button.setText(cardDeckTop); // Card Deck 업데이트
+                }
+            }
+        }
+        centralPanel.revalidate();
+        centralPanel.repaint();
+    }
+
     private void createCentralPanel() {
         centralPanel = new JPanel();
         centralPanel.setLayout(null); // 자유 배치
@@ -162,14 +175,5 @@ public class OneCardGameGUI extends JPanel {
         topRightPanel.removeAll();
         bottomLeftPanel.removeAll();
         bottomRightPanel.removeAll();
-    }
-
-    private JPanel createCardPanel(List<Card> hand) {
-        JPanel cardPanel = new JPanel(new FlowLayout());
-        for (Card card : hand) {
-            JButton cardButton = new JButton(card.toString());
-            cardPanel.add(cardButton);
-        }
-        return cardPanel;
     }
 }
