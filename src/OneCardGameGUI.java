@@ -97,13 +97,13 @@ public class OneCardGameGUI extends JPanel {
                 targetPanel = bottomLeftPanel;
                 yOffset = 50; // 하단 패널: y 위치를 더 아래로
                 nameX = 200;
-                nameY = 60;
+                nameY = 10;
             }
             case 3 -> { // Bottom Right Panel
                 targetPanel = bottomRightPanel;
                 yOffset = 50; // 하단 패널: y 위치를 더 아래로
                 nameX = 400;
-                nameY = 60;
+                nameY = 10;
             }
             default -> throw new IllegalArgumentException("Invalid position: " + position);
         }
@@ -132,10 +132,41 @@ public class OneCardGameGUI extends JPanel {
         nameLabel.setBounds(nameX - 50, nameY, 100, 20); // 닉네임의 너비 100px로 중앙 정렬
         targetPanel.add(nameLabel);
 
-        // **이모티콘** 위치: 이름 끝 바로 아래
-        JButton emojiButton = new JButton("이모티콘");
-        emojiButton.setBounds(nameX - 60, nameY + 30, 120, 30); // 고정된 y 위치 계산
-        targetPanel.add(emojiButton);
+        // **이모티콘 버튼들** 위치: 가로로 정렬된 이모티콘 버튼 추가
+        JPanel emojiPanel = new JPanel();
+        emojiPanel.setLayout(new GridLayout(1, 4, 10, 0)); // FlowLayout으로 가로 정렬
+        emojiPanel.setBounds(nameX - 150, nameY + 30, 300, 80); // 이모티콘 패널의 위치 및 크기 설정
+        emojiPanel.setOpaque(false); // 배경 투명화
+
+        // 이모티콘 이미지 버튼 생성
+        String[] emojiPaths = {
+                "resources/emoticon/good.png",
+                "resources/emoticon/huck.png",
+                "resources/emoticon/cry.png",
+                "resources/emoticon/hurry.png"
+        };
+
+        for (String emojiPath : emojiPaths) {
+            JButton emojiButton = new JButton();
+            emojiButton.setIcon(loadEmojiImage(emojiPath, 65, 65)); 
+            emojiButton.setBorderPainted(false); // 테두리 제거
+            emojiButton.setFocusPainted(false); // 포커스 윤곽선 제거
+            emojiButton.setContentAreaFilled(false); // 배경 투명화
+
+            emojiButton.addActionListener(e -> {
+                // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
+                if (client.getName().equals(playerName)) {
+                    System.out.println("이모티콘 클릭: " + emojiPath + " by client " + client.getName());
+                    //client.sendEmoji(emojiPath); // 서버에 이모티콘 전송
+                } else {
+                    System.out.println("다른 클라이언트 패널에서 클릭 이벤트 무시");
+                }
+            });
+
+            emojiPanel.add(emojiButton);
+        }
+
+        targetPanel.add(emojiPanel);
 
         targetPanel.revalidate();
         targetPanel.repaint();
@@ -210,6 +241,13 @@ public class OneCardGameGUI extends JPanel {
         String imagePath = "resources/" + suit.toLowerCase() + "/" + rank + ".png"; // 경로 생성
         ImageIcon icon = new ImageIcon(imagePath);
         Image img = icon.getImage().getScaledInstance(80, 120, Image.SCALE_SMOOTH); // 크기 조정
+        return new ImageIcon(img);
+    }
+
+    // 새로운 메서드: 이모티콘 이미지 로드
+    private ImageIcon loadEmojiImage(String imagePath, int width, int height) {
+        ImageIcon icon = new ImageIcon(imagePath);
+        Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH); // 크기 조정
         return new ImageIcon(img);
     }
 }
