@@ -25,6 +25,11 @@ public class ClientHandler implements Runnable {
         sendMessage("EMOJI|" + emojiPath + "|" + clientName); // "EMOJI|경로" 형식으로 클라이언트로 전송
     }
 
+    public void sendSubmittedCardToClient(Card playerSubmittedCard, String clientName) {
+        sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|" + clientName); //   
+
+    }
+
     @Override
     public void run() {
         try {
@@ -44,6 +49,12 @@ public class ClientHandler implements Runnable {
                     String emojiPath = parts[1];
                     String clientName = parts[2];
                     server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
+                } else if (message.startsWith("SUBMITTED_CARD|")) {
+                    String[] parts = message.split("\\|");
+                    String rank = parts[1];
+                    String suit = parts[2];
+                    Card card = new Card(rank, suit);
+                    server.broadcastSubmittedCard(card, parts[3]);
                 } else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
@@ -87,5 +98,22 @@ public class ClientHandler implements Runnable {
 
     public void sendMessage(String message) {
         out.println(message);
+    }
+
+    private void handlePlayCard(String input) {
+        String[] parts = input.split(" ");
+        if (parts.length != 3) {
+            sendMessage("ERROR: Invalid PLAY_CARD message format");
+            return;
+        }
+        String rank = parts[1];
+        String suit = parts[2];
+        Card card = new Card(rank, suit);
+        try {
+            game.playTurn(clientName, card);
+            server.broadcastSubmittedCard(card, clientName);
+        } catch (IllegalStateException e) {
+            sendMessage("ERROR: " + e.getMessage());
+        }
     }
 }

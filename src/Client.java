@@ -61,7 +61,10 @@ public class Client {
                 } else if (message.startsWith("REMAINING_CARDS:")) {
                     String remainingCards = message.substring(16); // 남은 카드 데이터
                     updateRemainingCards(remainingCards); // 남은 카드 갱신
-                } else if (message.startsWith("EMOJI|")) {
+                } else if (message.startsWith("SUBMITTED_CARD|")) {
+                    System.out.println("서버 메시지: " + message);
+                    onServerMessageReceived(message);
+                } else if (message.startsWith("EMOJI|")) {// 이모지 처리 메시지
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message);
                 } else {
@@ -109,7 +112,7 @@ public class Client {
         this.hand.addAll(newHand); // 새 손패 추가
 
         System.out.println("UI 갱신: " + hand); // 디버깅 로그 추가
-        gui.updateHand(hand); // GUI 갱신
+        gui.updateHand(this.getName(), hand); // GUI 갱신
     }
 
     // 게임 상태 업데이트
@@ -141,6 +144,12 @@ public class Client {
         System.out.println("받은 이모티콘 경로: " + emojiPath);
     }
 
+    public void sendSubmittedCard(Card card, String clientName) {
+        sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + clientName);
+        System.out.println("받은 카드: " + card);
+
+    }
+
     public void onServerMessageReceived(String message) {
         if (message.startsWith("EMOJI|")) {
             String[] parts = message.split("\\|");
@@ -148,17 +157,28 @@ public class Client {
             String clientName = parts[2];
             gui.handleIncomingEmoji(emojiPath, clientName); // UI에 애니메이션 반영
             System.out.println("수신한 이모티콘 경로: " + emojiPath + "|" + clientName);
+        } else if (message.startsWith("SUBMITTED_CARD|")) {
+            String[] parts = message.split("\\|");
+            String rank = parts[1];
+            String suit = parts[2];
+            for (String part : parts) {
+                System.out.println(part);
+            }
+            Card card = new Card(rank, suit);
+            // playCard(card);
+            // gui.updateHand(parts[3], hand); // 중앙 패널 갱신
+
         }
     }
 
     // 카드 제출 요청
-    public void playCard(Card card) {
+    public void playCard(Card card, List<Card> hand) {
         if (hand.contains(card)) {
             System.out.println("제출 요청: " + card);
             sendMessage("PLAY_CARD " + card.getRank() + " " + card.getSuit());
             hand.remove(card);
             System.out.println("손패에서 제거됨: " + card);
-            SwingUtilities.invokeLater(() -> gui.updateHand(hand)); // UI 갱신
+            SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
         } else {
             System.out.println("손패에 없는 카드입니다! 제출 실패: " + card);
         }
@@ -171,7 +191,7 @@ public class Client {
     public void addCard(Card card) {
         hand.add(card);
         SwingUtilities.invokeLater(() -> {
-            gui.updateHand(hand); // GUI 갱신
+            gui.updateHand(this.getName(), hand); // GUI 갱신
         });
     }
 

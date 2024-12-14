@@ -128,4 +128,13 @@ public class Server {
             }
         }
     }
+
+    public void broadcastSubmittedCard(Card card, String playerName) {
+        synchronized (clients) {
+            System.out.println("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName);
+            for (ClientHandler client : clients) {
+                client.sendSubmittedCardToClient(card, playerName);
+            }
+        }
+    }
 }
