@@ -1,6 +1,8 @@
 import java.awt.*;
 import javax.swing.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OneCardGameGUI extends JPanel {
     private JTextArea playerListArea;
@@ -9,6 +11,7 @@ public class OneCardGameGUI extends JPanel {
     private JPanel topLeftPanel, topRightPanel, bottomLeftPanel, bottomRightPanel;
     private JPanel centralPanel; // 중앙 패널 참조 추가
     private JLayeredPane layeredPane;
+    private Map<String, JPanel> clientPanels = new HashMap<>();
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -86,6 +89,7 @@ public class OneCardGameGUI extends JPanel {
                 yOffset = -80; // 상단 패널: y 위치를 더 위로
                 nameX = 200;
                 nameY = 280;
+
             }
             case 1 -> { // Top Right Panel
                 targetPanel = topRightPanel;
@@ -107,7 +111,7 @@ public class OneCardGameGUI extends JPanel {
             }
             default -> throw new IllegalArgumentException("Invalid position: " + position);
         }
-
+        clientPanels.put(playerName, targetPanel);
         targetPanel.removeAll(); // 기존 내용 제거
 
         // 카드 버튼 추가 (가로 정렬 적용)
@@ -148,7 +152,11 @@ public class OneCardGameGUI extends JPanel {
 
         for (String emojiPath : emojiPaths) {
             JButton emojiButton = new JButton();
-            emojiButton.setIcon(loadEmojiImage(emojiPath, 65, 65)); 
+            ImageIcon originalIcon = loadEmojiImage(emojiPath, 65, 65);
+            originalIcon.setDescription(emojiPath); // 반드시 경로 설정
+            emojiButton.setIcon(originalIcon);
+            // 원본 이미지를 버튼에 저장
+            emojiButton.putClientProperty("originalIcon", originalIcon);
             emojiButton.setBorderPainted(false); // 테두리 제거
             emojiButton.setFocusPainted(false); // 포커스 윤곽선 제거
             emojiButton.setContentAreaFilled(false); // 배경 투명화
@@ -157,7 +165,7 @@ public class OneCardGameGUI extends JPanel {
                 // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
                 if (client.getName().equals(playerName)) {
                     System.out.println("이모티콘 클릭: " + emojiPath + " by client " + client.getName());
-                    //client.sendEmoji(emojiPath); // 서버에 이모티콘 전송
+                    client.sendEmoji(emojiPath, client.getName()); // 서버에 이모티콘 전송
                 } else {
                     System.out.println("다른 클라이언트 패널에서 클릭 이벤트 무시");
                 }
@@ -203,12 +211,6 @@ public class OneCardGameGUI extends JPanel {
         centralPanel.repaint();
     }
 
-    private ImageIcon resizeImage(ImageIcon icon, int width, int height) {
-        Image img = icon.getImage();
-        Image scaledImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaledImg);
-    }
-
     private void createCentralPanel() {
         centralPanel = new JPanel();
         centralPanel.setLayout(null); // 자유 배치
@@ -250,4 +252,88 @@ public class OneCardGameGUI extends JPanel {
         Image img = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH); // 크기 조정
         return new ImageIcon(img);
     }
+
+    public void handleIncomingEmoji(String emojiPath, String clientName) {
+        SwingUtilities.invokeLater(() -> showEmojiAnimation(emojiPath, clientName)); // UI에서 애니메이션 실행
+    }
+
+    public void showEmojiAnimation(String emojiPath, String clientName) {
+        System.out.println("[showEmojiAnimation] 호출된 경로: " + emojiPath + ", 클라이언트: " + clientName);
+    
+        // 이모티콘 이미지를 로드
+        ImageIcon emojiIcon = loadEmojiImage(emojiPath, 65, 65); // 원래 크기
+        JLabel emojiLabel = new JLabel(emojiIcon);
+    
+        // 원본 크기 및 확대 크기 설정
+        int originalWidth = emojiIcon.getIconWidth();
+        int originalHeight = emojiIcon.getIconHeight();
+        int expandedWidth = originalWidth + 100; // 확대 크기
+        int expandedHeight = originalHeight + 100;
+    
+        // 이모티콘의 초기 위치를 중앙으로 설정 (클라이언트 패널 위치 기반)
+        JPanel clientPanel = clientPanels.get(clientName.trim());
+        if (clientPanel == null) {
+            System.out.println("[showEmojiAnimation] 클라이언트 패널을 찾지 못했습니다: " + clientName);
+            return;
+        }
+        Point clientPanelLocation = clientPanel.getLocationOnScreen();
+        Point layeredPaneLocation = layeredPane.getLocationOnScreen();
+    
+        // 위치 계산 (JLayeredPane 좌표계 기준으로 변환)
+        int emojiX = clientPanelLocation.x - layeredPaneLocation.x + clientPanel.getWidth() / 2 - originalWidth / 2;
+        int emojiY = clientPanelLocation.y - layeredPaneLocation.y + clientPanel.getHeight() / 2 - originalHeight / 2;
+    
+        // 초기 위치와 크기 설정
+        emojiLabel.setBounds(emojiX, emojiY, originalWidth, originalHeight);
+    
+        // JLayeredPane 최상단에 추가
+        layeredPane.add(emojiLabel, JLayeredPane.DRAG_LAYER); // 최상단 레이어 사용
+        layeredPane.revalidate();
+        layeredPane.repaint();
+    
+        // 1초 후 확대
+        Timer expandTimer = new Timer(0, e -> {
+            emojiLabel.setBounds(
+                emojiX - 50, emojiY - 50, // 확대 위치 (중심 유지)
+                expandedWidth, expandedHeight // 확대 크기
+            );
+            emojiLabel.setIcon(resizeImage(emojiIcon, expandedWidth, expandedHeight));
+            layeredPane.revalidate();
+            layeredPane.repaint();
+        });
+        expandTimer.setRepeats(false);
+        expandTimer.start();
+    
+        // 1초 후 원래 크기로 돌아가며 제거
+        Timer removeTimer = new Timer(1000, e -> {
+            layeredPane.remove(emojiLabel);
+            layeredPane.revalidate();
+            layeredPane.repaint();
+        });
+        removeTimer.setRepeats(false);
+        removeTimer.start();
+    }
+    
+    private ImageIcon resizeImage(ImageIcon icon, int maxWidth, int maxHeight) {
+        Image img = icon.getImage();
+    
+        // 원본 크기
+        int originalWidth = icon.getIconWidth();
+        int originalHeight = icon.getIconHeight();
+    
+        // 비율 유지하면서 크기 계산
+        double widthRatio = (double) maxWidth / originalWidth;
+        double heightRatio = (double) maxHeight / originalHeight;
+        double scale = Math.min(widthRatio, heightRatio); // 비율이 작은 쪽 기준으로 크기 조정
+    
+        int newWidth = (int) (originalWidth * scale);
+        int newHeight = (int) (originalHeight * scale);
+    
+        // 리사이즈
+        Image scaledImg = img.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+        ImageIcon resizedIcon = new ImageIcon(scaledImg);
+        resizedIcon.setDescription(icon.getDescription()); // 경로 정보 유지
+        return resizedIcon;
+    }
+
 }
