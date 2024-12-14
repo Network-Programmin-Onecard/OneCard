@@ -119,5 +119,13 @@ public class Server {
             }
         }
     }
-    
+
+    public void broadcastEmoji(String emojiPath, String clientName) {
+        synchronized (clients) {
+            System.out.println("Broadcasted Emoji: " + emojiPath + "|" + clientName);
+            for (ClientHandler client : clients) {
+                client.sendEmojiToClient(emojiPath, clientName);
+            }
+        }
+    }
 }

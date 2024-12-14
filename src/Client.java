@@ -19,7 +19,7 @@ public class Client {
         this.gui = gui;
     }
 
-    public String getName(){
+    public String getName() {
         return this.name;
     }
 
@@ -61,10 +61,11 @@ public class Client {
                 } else if (message.startsWith("REMAINING_CARDS:")) {
                     String remainingCards = message.substring(16); // 남은 카드 데이터
                     updateRemainingCards(remainingCards); // 남은 카드 갱신
-                } else if (message.startsWith("ERROR:")) {
-                    System.out.println("오류 메시지: " + message.substring(6));
-                } else {
+                } else if (message.startsWith("EMOJI|")) {
                     System.out.println("서버 메시지: " + message);
+                    onServerMessageReceived(message);
+                } else {
+                    System.out.println("오류 메시지: " + message.substring(6));
                 }
             }
         } catch (IOException e) {
@@ -74,11 +75,11 @@ public class Client {
 
     private void updateRemainingCards(String remainingCards) {
         String[] parts = remainingCards.split(",");
-        
+
         // String 데이터를 Card 객체로 변환
         Card submittedCard = parseCard(parts[0]); // 첫 번째 카드
         Card cardDeckTop = parts.length > 1 ? parseCard(parts[1]) : null; // 두 번째 카드 (없으면 null)
-    
+
         gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
     }
 
@@ -132,6 +133,22 @@ public class Client {
                 gui.updatePlayerPanel(position, playerName, hand);
             }
         });
+    }
+
+    public void sendEmoji(String emojiPath, String clientName) {
+        // PrintWriter를 사용하여 이모티콘 전송
+        sendMessage("EMOJI|" + emojiPath + "|" + clientName);
+        System.out.println("받은 이모티콘 경로: " + emojiPath);
+    }
+
+    public void onServerMessageReceived(String message) {
+        if (message.startsWith("EMOJI|")) {
+            String[] parts = message.split("\\|");
+            String emojiPath = parts[1];
+            String clientName = parts[2];
+            gui.handleIncomingEmoji(emojiPath, clientName); // UI에 애니메이션 반영
+            System.out.println("수신한 이모티콘 경로: " + emojiPath + "|" + clientName);
+        }
     }
 
     // 카드 제출 요청

@@ -5,7 +5,6 @@ public class ClientHandler implements Runnable {
     private final Socket socket;
     private final Server server;
     private final Game game;
-
     private BufferedReader in;
     private PrintWriter out;
     private String clientName;
@@ -14,48 +13,69 @@ public class ClientHandler implements Runnable {
         this.socket = socket;
         this.server = server;
         this.game = game;
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream())); // 클라이언트 입력 스트림
+            out = new PrintWriter(socket.getOutputStream(), true); // 클라이언트 출력 스트림
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendEmojiToClient(String emojiPath, String clientName) {
+        sendMessage("EMOJI|" + emojiPath + "|" + clientName); // "EMOJI|경로" 형식으로 클라이언트로 전송
     }
 
     @Override
     public void run() {
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            // 클라이언트의 이름을 수신
+            clientName = in.readLine();
+            System.out.println("클라이언트 연결: " + clientName);
 
-            clientName = in.readLine(); // 클라이언트 이름 수신
-            game.addPlayer(clientName); // 게임에 플레이어 추가
+            // 클라이언트로부터 메시지를 계속 수신
+            String message;
+            while ((message = in.readLine()) != null) {
+                System.out.println("클라이언트 메시지: " + message);
 
-            server.broadcastGameState();
-
-            String input;
-            while ((input = in.readLine()) != null) {
-                if (input.startsWith("PLAY_CARD")) {
-                    handlePlayCard(input);
+                // 메시지에 따라 처리
+                if (message.startsWith("EMOJI|")) {
+                    // 이모티콘 처리
+                    String[] parts = message.split("\\|");
+                    String emojiPath = parts[1];
+                    String clientName = parts[2];
+                    server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
+                } else {
+                    System.out.println("알 수 없는 메시지: " + message);
                 }
             }
         } catch (IOException e) {
-            System.out.println(clientName + " 연결 종료");
+            e.printStackTrace();
         } finally {
-            server.removeClient(this); // 클라이언트 제거
-            game.removePlayer(clientName); // 게임에서도 제거
+            // 클라이언트 연결 종료
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            server.removeClient(this); // 서버에서 클라이언트 제거
         }
     }
 
-    private void handlePlayCard(String input) {
-        String cardInfo = input.substring(10); // "PLAY_CARD " 이후 카드 정보 추출
-        try {
-            Card card = parseCard(cardInfo);
-            boolean gameOver = game.playTurn(clientName, card);
-            if (gameOver) {
-                server.broadcastGameState();
-                server.broadcastMessage(clientName + "가 승리했습니다!");
-            } else {
-                server.broadcastGameState();
-            }
-        } catch (IllegalStateException e) {
-            sendMessage("ERROR: " + e.getMessage());
-        }
-    }
+    // private void handlePlayCard(String input) {
+    // String cardInfo = input.substring(10); // "PLAY_CARD " 이후 카드 정보 추출
+    // try {
+    // Card card = parseCard(cardInfo);
+    // boolean gameOver = game.playTurn(clientName, card);
+    // if (gameOver) {
+    // server.broadcastGameState();
+    // server.broadcastMessage(clientName + "가 승리했습니다!");
+    // } else {
+    // server.broadcastGameState();
+    // }
+    // } catch (IllegalStateException e) {
+    // sendMessage("ERROR: " + e.getMessage());
+    // }
+    // }
 
     public String serializeHand() {
         return game.serializeHand(clientName); // 게임에서 손패 직렬화
@@ -67,10 +87,5 @@ public class ClientHandler implements Runnable {
 
     public void sendMessage(String message) {
         out.println(message);
-    }
-
-    private Card parseCard(String cardInfo) {
-        String[] parts = cardInfo.split(" ");
-        return new Card(parts[0], parts[1]);
     }
 }
