@@ -19,6 +19,10 @@ public class Client {
         this.gui = gui;
     }
 
+    public String getName(){
+        return this.name;
+    }
+
     public boolean connect(String ip, int port) {
         try {
             socket = new Socket(ip, port);
