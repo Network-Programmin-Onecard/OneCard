@@ -155,7 +155,8 @@ public class Server {
         }
     }
 
-    public synchronized void handleCardDeck(String name, Card card){
+    public synchronized void handleCardDeck(String name){
+        Card card = game.getFirstCardDeck();
         try{
             for (ClientHandler client : clients) {
                 client.sendCardDeckToClient(card, name);

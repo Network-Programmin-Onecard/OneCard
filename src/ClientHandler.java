@@ -110,10 +110,11 @@ public class ClientHandler implements Runnable {
         synchronized (game) {
             Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
             if (drawnCard != null) {
-                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
+                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가      
                 server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
                 System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
-                server.handleCardDeck(playerName, drawnCard);
+                //server.handleCardDeck(playerName, drawnCard);
+                server.handleCardDeck(playerName);
             } else {
                 System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
             }

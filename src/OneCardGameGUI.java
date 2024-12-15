@@ -112,7 +112,7 @@ public class OneCardGameGUI extends JPanel {
     public void updateDeckCard(Card card) {
         SwingUtilities.invokeLater(() -> {
             if (cardDeckButton != null) {
-                ImageIcon cardImage = loadCardImage(card);
+                ImageIcon cardImage = loadCentralCardImage(card);
                 if (cardImage != null) {
                     cardDeckButton.setIcon(cardImage);
                     System.out.println("card Deck버튼 이미지 업데이트 성공");

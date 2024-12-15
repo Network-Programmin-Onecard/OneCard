@@ -21,6 +21,15 @@ public class Deck {
         }
     }
 
+    public Card getFirstCard() {
+        if (!cards.isEmpty()) {
+            return cards.get(0);
+        } else {
+            System.out.println("ERROR: Deck is empty!");
+            return null; // 리스트가 비어있으면 null 반환
+        }
+    }
+
     public void shuffle() {
         Collections.shuffle(cards);
         System.out.println("덱 셔플 완료: "); // 디버깅

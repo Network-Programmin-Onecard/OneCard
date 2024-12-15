@@ -93,6 +93,14 @@ public class Game {
         return this.submittedCards.getTopCard();
     }
 
+    public Card getFirstCardDeck() {
+        Card card = this.deck.getFirstCard();
+        if (card == null) {
+            System.out.println("ERROR: No cards available in the deck!");
+        }
+        return card;
+    }
+
     public Card drawCardFromDeck() {
         return deck.dealCard();
     }
