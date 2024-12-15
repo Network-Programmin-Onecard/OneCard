@@ -67,7 +67,11 @@ public class Client {
                 } else if (message.startsWith("EMOJI|")) {// 이모지 처리 메시지
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message);
-                } else {
+                } else if (message.startsWith("DRAW_CARD|")) {
+                    System.out.println("서버 메시지: " + message);
+                    onServerMessageReceived(message); // 게임 상태 파싱 후 업데이트
+                } 
+                else {
                     System.out.println("오류 메시지: " + message.substring(6));
                 }
             }
@@ -150,7 +154,13 @@ public class Client {
 
     }
 
+    public void requestCardFromDeck(String playerName) {
+        sendMessage("DRAW_CARD|" + playerName);
+        System.out.println("card_deck 가져간 플레이어: " + playerName);
+    }    
+
     public void onServerMessageReceived(String message) {
+        System.out.println("서버로부터 메시지 받는거 클라이언트에서 확인: "+message);
         if (message.startsWith("EMOJI|")) {
             String[] parts = message.split("\\|");
             String emojiPath = parts[1];
@@ -161,13 +171,14 @@ public class Client {
             String[] parts = message.split("\\|");
             String rank = parts[1];
             String suit = parts[2];
-            for (String part : parts) {
-                System.out.println(part);
-            }
             Card card = new Card(rank, suit);
-            // playCard(card);
-            // gui.updateHand(parts[3], hand); // 중앙 패널 갱신
             gui.updateSubmittedCard(card);
+        } else if (message.startsWith("DRAW_CARD|")) {
+            String[] parts = message.split("\\|");
+            String rank = parts[1];
+            String suit = parts[2];
+            Card card = new Card(rank, suit);
+            gui.updateDeckCard(card);
         }
     }
 

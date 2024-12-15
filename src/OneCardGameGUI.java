@@ -56,7 +56,7 @@ public class OneCardGameGUI extends JPanel {
                 System.out.println("핸드 패널을 찾을 수 없습니다: " + playerName);
                 return;
             }
-    
+
             // 카드 버튼만 삭제
             Component[] components = handPanel.getComponents();
             for (Component comp : components) {
@@ -64,32 +64,31 @@ public class OneCardGameGUI extends JPanel {
                     handPanel.remove(button); // 카드 버튼만 삭제
                 }
             }
-    
+
             // 새 카드 버튼 추가
             for (Card card : hand) {
                 JButton cardButton = new JButton(card.toString());
                 cardButton.putClientProperty("type", "cardButton");
                 cardButton.putClientProperty("card", card); // 카드 정보 저장
-    
+
                 cardButton.addActionListener(e -> {
                     hand.remove(card); // 핸드에서 카드 제거
                     handPanel.remove(cardButton); // 해당 버튼 제거
-                    client.playCard(card,hand, playerName); // 서버로 카드 제출 요청
-    
+                    client.playCard(card, hand, playerName); // 서버로 카드 제출 요청
+
                     // UI 갱신
                     handPanel.revalidate();
                     handPanel.repaint();
                 });
-    
+
                 handPanel.add(cardButton);
             }
-    
+
             System.out.println("UI 갱신 완료, 남은 손패: " + hand);
             handPanel.revalidate();
             handPanel.repaint();
         });
     }
-    
 
     public void updateSubmittedCard(Card card) {
         SwingUtilities.invokeLater(() -> {
@@ -108,7 +107,24 @@ public class OneCardGameGUI extends JPanel {
             }
         });
     }
-    
+
+    public void updateDeckCard(Card card) {
+        SwingUtilities.invokeLater(() -> {
+            if (cardDeckButton != null) {
+                ImageIcon cardImage = loadCardImage(card);
+                if (cardImage != null) {
+                    cardDeckButton.setIcon(cardImage);
+                    System.out.println("card Deck버튼 이미지 업데이트 성공");
+                } else {
+                    System.out.println("ERROR: 카드 이미지를 로드할 수 없습니다.");
+                }
+                centralPanel.revalidate();
+                centralPanel.repaint();
+            } else {
+                System.out.println("ERROR: card Deck 버튼이 초기화되지 않았습니다.");
+            }
+        });
+    }
 
     public void updatePlayerList(String[] players) {
         SwingUtilities.invokeLater(() -> {
@@ -282,7 +298,13 @@ public class OneCardGameGUI extends JPanel {
         cardDeckButton = new RoundedButton("Card Deck");
         cardDeckButton.setBounds(250, 45, 100, 150); // 위치 및 크기 조정
         cardDeckButton.setRoundness(20, 20); // 둥근 모서리 설정
+        cardDeckButton.addActionListener(e -> {
+            System.out.println("Card Deck 클릭됨");
+            client.requestCardFromDeck(client.getName()); // 서버에 카드 요청
+        });
         centralPanel.add(cardDeckButton);
+        centralPanel.revalidate();
+        centralPanel.repaint();
     }
 
     public void clearPlayerPanels() {

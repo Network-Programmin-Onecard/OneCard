@@ -30,6 +30,12 @@ public class ClientHandler implements Runnable {
 
     }
 
+    public void sendCardDeckToClient(Card CardDeck, String clientName){
+        System.out.println("sendCardDeckToClient 정상 실행됨");
+        System.out.println("DRAW_CARD|"+CardDeck.getRank()+"|"+CardDeck.getSuit()+"|"+clientName);
+        sendMessage("DRAW_CARD|"+CardDeck.getRank()+"|"+CardDeck.getSuit()+"|"+clientName);
+    }
+
     @Override
     public void run() {
         try {
@@ -51,7 +57,12 @@ public class ClientHandler implements Runnable {
                     server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
                 } else if (message.startsWith("SUBMITTED_CARD|")) {
                     handleCardSumission(message);
-                } else {
+                } else if (message.startsWith("DRAW_CARD|")) {
+                    System.out.println(message+" 메시지 정상적으로 클라이언트 핸들러에 도착");
+                    String playerName = message.split("\\|")[1]; // 플레이어 이름 추출
+                    handleDrawCard(playerName);
+                }
+                else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
             }
@@ -83,10 +94,23 @@ public class ClientHandler implements Runnable {
             else{
                 server.broadcastGameState();
             }
-        } catch (Exception e){
+        } catch (Exception e){ 
             sendMessage("ERROR: 카드 제출 중 문제가 발생했습니다." + e.getMessage());
         }
+    }
 
+    private void handleDrawCard(String playerName) {
+        synchronized (game) {
+            Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
+            if (drawnCard != null) {
+                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
+                server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
+                System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
+                server.handleCardDeck(playerName, drawnCard);
+            } else {
+                System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
+            }
+        }
     }
 
     public String serializeHand() {
