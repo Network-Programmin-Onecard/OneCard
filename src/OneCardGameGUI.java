@@ -11,6 +11,8 @@ public class OneCardGameGUI extends JPanel {
     private JPanel centralPanel; // 중앙 패널 참조 추가
     private JLayeredPane layeredPane;
     private Map<String, JPanel> clientPanels = new HashMap<>();
+    private RoundedButton submittedCardButton;
+    private RoundedButton cardDeckButton;
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -72,8 +74,7 @@ public class OneCardGameGUI extends JPanel {
                 cardButton.addActionListener(e -> {
                     hand.remove(card); // 핸드에서 카드 제거
                     handPanel.remove(cardButton); // 해당 버튼 제거
-                    //updateSubmittedCard(card); // 제출된 카드 갱신
-                    client.playCard(card,hand); // 서버로 카드 제출 요청
+                    client.playCard(card,hand, playerName); // 서버로 카드 제출 요청
     
                     // UI 갱신
                     handPanel.revalidate();
@@ -92,17 +93,22 @@ public class OneCardGameGUI extends JPanel {
 
     public void updateSubmittedCard(Card card) {
         SwingUtilities.invokeLater(() -> {
-            for (Component comp : centralPanel.getComponents()) {
-                if (comp instanceof JButton button && "Submitted Card".equals(button.getText())) {
-                    button.setText(""); // 기존 텍스트 제거
-                    button.setIcon(loadCardImage(card)); // 카드 이미지 설정
-                    centralPanel.revalidate();
-                    centralPanel.repaint();
-                    return;
+            if (submittedCardButton != null) {
+                ImageIcon cardImage = loadCardImage(card);
+                if (cardImage != null) {
+                    submittedCardButton.setIcon(cardImage);
+                    System.out.println("Submitted Card 버튼 이미지 업데이트 성공");
+                } else {
+                    System.out.println("ERROR: 카드 이미지를 로드할 수 없습니다.");
                 }
+                centralPanel.revalidate();
+                centralPanel.repaint();
+            } else {
+                System.out.println("ERROR: Submitted Card 버튼이 초기화되지 않았습니다.");
             }
         });
     }
+    
 
     public void updatePlayerList(String[] players) {
         SwingUtilities.invokeLater(() -> {
@@ -172,7 +178,7 @@ public class OneCardGameGUI extends JPanel {
                 if (client.getName().equals(playerName)) {
                     System.out.println("클릭한 카드 : " + card + " by client " + client.getName());
                     client.sendSubmittedCard(card, client.getName());
-                    client.playCard(card, hand);
+                    client.playCard(card, hand, playerName);
                 } else {
                     System.out.println("다른 플레이어의 패널에서 카드를 제출할 수 없습니다.");
                 }
@@ -267,13 +273,13 @@ public class OneCardGameGUI extends JPanel {
         centralPanel.setBackground(new Color(144, 238, 144));
 
         // Submitted Card 버튼 추가
-        RoundedButton submittedCardButton = new RoundedButton("Submitted Card");
+        submittedCardButton = new RoundedButton("Submitted Card");
         submittedCardButton.setBounds(50, 45, 100, 150); // 위치 및 크기 조정
         submittedCardButton.setRoundness(20, 20); // 둥근 모서리 설정
         centralPanel.add(submittedCardButton);
 
         // Card Deck 버튼 추가
-        RoundedButton cardDeckButton = new RoundedButton("Card Deck");
+        cardDeckButton = new RoundedButton("Card Deck");
         cardDeckButton.setBounds(250, 45, 100, 150); // 위치 및 크기 조정
         cardDeckButton.setRoundness(20, 20); // 둥근 모서리 설정
         centralPanel.add(cardDeckButton);

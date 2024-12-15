@@ -56,9 +56,6 @@ public class Game {
      */
     public synchronized boolean playTurn(String playerName, Card card) {
         List<Card> hand = playerHands.get(playerName);
-        if (hand == null || !hand.contains(card)) {
-            throw new IllegalStateException("손패에 없는 카드를 제출하려 했습니다!");
-        }
 
         // 손패에서 카드 제거 및 제출된 카드 스택에 추가
         hand.remove(card);
