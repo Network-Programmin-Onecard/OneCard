@@ -51,6 +51,14 @@ public class ClientHandler implements Runnable {
                     server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
                 } else if (message.startsWith("SUBMITTED_CARD|")) {
                     handleCardSumission(message);
+                } else if (message.startsWith("TOP_SUBMITTED_CARD")){
+                    Card topCard = server.getTopSubmittedCard();
+                    if (topCard != null) {
+                        sendMessage("TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
+                        System.out.println("클라이언트핸들러 sendMessage: TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
+                    } else {
+                        sendMessage("ERROR|No top card available");
+                    }
                 } else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
