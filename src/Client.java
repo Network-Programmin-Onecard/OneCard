@@ -10,6 +10,7 @@ public class Client {
     private String name; // 클라이언트 이름
     private List<Card> hand = new ArrayList<>(); // 플레이어의 손패
     private OneCardGameGUI gui; // GUI 업데이트를 위한 참조
+    private Card cardDeckTop;
 
     public Client(String name) {
         this.name = name;
@@ -70,8 +71,13 @@ public class Client {
                 } else if (message.startsWith("DRAW_CARD|")) {
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message); // 게임 상태 파싱 후 업데이트
-                } 
-                else {
+                } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
+
+                    String[] parts = message.split("\\|");
+                    if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
+                        gui.createCard(parts[1], parts[2]);
+                    }
+                } else {
                     System.out.println("오류 메시지: " + message.substring(6));
                 }
             }
@@ -82,12 +88,17 @@ public class Client {
 
     private void updateRemainingCards(String remainingCards) {
         String[] parts = remainingCards.split(",");
+        Card submittedCard;
+        if (parts.length < 2) {
+            submittedCard = parseCard(parts[0]); // 첫 번째 카드
+            gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
+        } else {
+            // String 데이터를 Card 객체로 변환
+            submittedCard = parseCard(parts[0]); // 첫 번째 카드
+            cardDeckTop = parts.length > 1 ? parseCard(parts[1]) : null; // 두 번째 카드 (없으면 null)
+            gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
 
-        // String 데이터를 Card 객체로 변환
-        Card submittedCard = parseCard(parts[0]); // 첫 번째 카드
-        Card cardDeckTop = parts.length > 1 ? parseCard(parts[1]) : null; // 두 번째 카드 (없으면 null)
-
-        gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
+        }
     }
 
     private Card parseCard(String cardString) {
@@ -157,10 +168,14 @@ public class Client {
     public void requestCardFromDeck(String playerName) {
         sendMessage("DRAW_CARD|" + playerName);
         System.out.println("card_deck 가져간 플레이어: " + playerName);
-    }    
+    }
+
+    public void requestTopSubmittedCard() {
+        sendMessage("TOP_SUBMITTED_CARD"); // 서버에 카드 정보 요청
+    }
 
     public void onServerMessageReceived(String message) {
-        System.out.println("서버로부터 메시지 받는거 클라이언트에서 확인: "+message);
+        System.out.println("서버로부터 메시지 받는거 클라이언트에서 확인: " + message);
         if (message.startsWith("EMOJI|")) {
             String[] parts = message.split("\\|");
             String emojiPath = parts[1];
@@ -179,6 +194,11 @@ public class Client {
             String suit = parts[2];
             Card card = new Card(rank, suit);
             gui.updateDeckCard(card);
+        } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
+            String[] parts = message.split("\\|");
+            if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
+                gui.createCard(parts[1], parts[2]);
+            }
         }
     }
 

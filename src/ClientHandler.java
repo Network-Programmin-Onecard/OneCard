@@ -61,8 +61,15 @@ public class ClientHandler implements Runnable {
                     System.out.println(message+" 메시지 정상적으로 클라이언트 핸들러에 도착");
                     String playerName = message.split("\\|")[1]; // 플레이어 이름 추출
                     handleDrawCard(playerName);
-                }
-                else {
+                } else if (message.startsWith("TOP_SUBMITTED_CARD")){
+                    Card topCard = server.getTopSubmittedCard();
+                    if (topCard != null) {
+                        sendMessage("TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
+                        System.out.println("클라이언트핸들러 sendMessage: TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
+                    } else {
+                        sendMessage("ERROR|No top card available");
+                    }
+                } else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
             }

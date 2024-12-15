@@ -3,7 +3,7 @@ import java.util.*;
 public class Game {
     private final Map<String, List<Card>> playerHands = new HashMap<>(); // 플레이어 이름과 손패를 매핑
     private final Deck deck; // 덱 객체 (Deck 클래스 사용)
-    private final SubmittedCard submittedCards; // 제출된 카드 관리 객체
+    public SubmittedCard submittedCards; // 제출된 카드 관리 객체
 
     public Game() {
         this.deck = new Deck(); // 덱 생성
@@ -63,7 +63,6 @@ public class Game {
 
         // 손패에서 카드 제거 및 제출된 카드 스택에 추가
         hand.remove(card);
-        submittedCards.addCard(card);
 
         // 덱 상태 확인 및 보충
         // deck.replenishFromSubmittedCards(submittedCards);
@@ -91,7 +90,7 @@ public class Game {
      * 제출된 카드 더미의 최상위 카드 반환
      */
     public synchronized Card getTopSubmittedCard() {
-        return submittedCards.getTopCard();
+        return this.submittedCards.getTopCard();
     }
 
     public Card drawCardFromDeck() {
@@ -116,5 +115,10 @@ public class Game {
 
     public List<Card> getRemainingDeck() {
         return deck.getCards(); // Deck 클래스의 getCards() 호출
+    }
+
+    public String updateSubmittedCard(Card card){
+        submittedCards.addCard(card);
+        return getTopSubmittedCard().toString();
     }
 }
