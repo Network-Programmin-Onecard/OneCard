@@ -94,7 +94,7 @@ public class OneCardGameGUI extends JPanel {
     public void updateSubmittedCard(Card card) {
         SwingUtilities.invokeLater(() -> {
             if (submittedCardButton != null) {
-                ImageIcon cardImage = loadCardImage(card);
+                ImageIcon cardImage = loadCentralCardImage(card);
                 if (cardImage != null) {
                     submittedCardButton.setIcon(cardImage);
                     System.out.println("Submitted Card 버튼 이미지 업데이트 성공");
@@ -177,8 +177,14 @@ public class OneCardGameGUI extends JPanel {
                 // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
                 if (client.getName().equals(playerName)) {
                     System.out.println("클릭한 카드 : " + card + " by client " + client.getName());
+                    Card topCard = client.requestTopSubmittedCard();
+                    if (topCard == null || topCard.getSuit().equals(card.getSuit()) || topCard.getRank().equals(card.getRank())) {
                     client.sendSubmittedCard(card, client.getName());
                     client.playCard(card, hand, playerName);
+                    }
+                    else{
+                        System.out.println("카드 제출 불가: 숫자나 모양이 일치하지 않습니다. (" + topCard + ")");
+                    }
                 } else {
                     System.out.println("다른 플레이어의 패널에서 카드를 제출할 수 없습니다.");
                 }
@@ -298,6 +304,15 @@ public class OneCardGameGUI extends JPanel {
         String imagePath = "resources/" + suit.toLowerCase() + "/" + rank + ".png"; // 경로 생성
         ImageIcon icon = new ImageIcon(imagePath);
         Image img = icon.getImage().getScaledInstance(80, 120, Image.SCALE_SMOOTH); // 크기 조정
+        return new ImageIcon(img);
+    }
+
+    private ImageIcon loadCentralCardImage(Card card) {
+        String rank = card.getRank();
+        String suit = card.getSuit();
+        String imagePath = "resources/" + suit.toLowerCase() + "/" + rank + ".png"; // 경로 생성
+        ImageIcon icon = new ImageIcon(imagePath);
+        Image img = icon.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH); // 크기 조정
         return new ImageIcon(img);
     }
 
