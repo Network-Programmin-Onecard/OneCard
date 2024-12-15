@@ -131,6 +131,9 @@ public class Server {
 
     public synchronized boolean handleCardSubmission(String name, Card card){
         try{
+            for (ClientHandler client : clients) {
+                client.sendSubmittedCardToClient(card, name);
+            }
             return game.playTurn(name, card);
         } catch(IllegalStateException e){
             System.out.println("ERROR: "+e.getMessage());

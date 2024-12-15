@@ -167,15 +167,15 @@ public class Client {
             Card card = new Card(rank, suit);
             // playCard(card);
             // gui.updateHand(parts[3], hand); // 중앙 패널 갱신
-
+            gui.updateSubmittedCard(card);
         }
     }
 
     // 카드 제출 요청
-    public void playCard(Card card, List<Card> hand) {
+    public void playCard(Card card, List<Card> hand, String playerName) {
         if (hand.contains(card)) {
             System.out.println("제출 요청: " + card);
-            sendMessage("PLAY_CARD " + card.getRank() + " " + card.getSuit());
+            sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName);
             hand.remove(card);
             System.out.println("손패에서 제거됨: " + card);
             SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
