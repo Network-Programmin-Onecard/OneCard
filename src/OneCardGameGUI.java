@@ -11,7 +11,6 @@ public class OneCardGameGUI extends JPanel {
     private JPanel centralPanel; // 중앙 패널 참조 추가
     private JLayeredPane layeredPane;
     private Map<String, JPanel> clientPanels = new HashMap<>();
-    private SubmittedCard submittedCard; // 제출된 카드 관리
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -73,7 +72,7 @@ public class OneCardGameGUI extends JPanel {
                 cardButton.addActionListener(e -> {
                     hand.remove(card); // 핸드에서 카드 제거
                     handPanel.remove(cardButton); // 해당 버튼 제거
-                    updateSubmittedCard(card); // 제출된 카드 갱신
+                    //updateSubmittedCard(card); // 제출된 카드 갱신
                     client.playCard(card,hand); // 서버로 카드 제출 요청
     
                     // UI 갱신

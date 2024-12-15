@@ -50,11 +50,7 @@ public class ClientHandler implements Runnable {
                     String clientName = parts[2];
                     server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
                 } else if (message.startsWith("SUBMITTED_CARD|")) {
-                    String[] parts = message.split("\\|");
-                    String rank = parts[1];
-                    String suit = parts[2];
-                    Card card = new Card(rank, suit);
-                    server.broadcastSubmittedCard(card, parts[3]);
+                    handleCardSumission(message);
                 } else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
@@ -72,21 +68,26 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // private void handlePlayCard(String input) {
-    // String cardInfo = input.substring(10); // "PLAY_CARD " 이후 카드 정보 추출
-    // try {
-    // Card card = parseCard(cardInfo);
-    // boolean gameOver = game.playTurn(clientName, card);
-    // if (gameOver) {
-    // server.broadcastGameState();
-    // server.broadcastMessage(clientName + "가 승리했습니다!");
-    // } else {
-    // server.broadcastGameState();
-    // }
-    // } catch (IllegalStateException e) {
-    // sendMessage("ERROR: " + e.getMessage());
-    // }
-    // }
+    private void handleCardSumission(String message){
+        try{
+            String[] parts = message.split("\\|");
+            String rank = parts[1];
+            String suit = parts[2];
+            String clientName = parts[3];
+            Card card = new Card(rank, suit);
+
+            boolean isGameOver = server.handleCardSubmission(clientName, card);
+            if(isGameOver){
+                server.broadcastMessage(clientName + "(이)가 승리했습니다.");
+            }
+            else{
+                server.broadcastGameState();
+            }
+        } catch (Exception e){
+            sendMessage("ERROR: 카드 제출 중 문제가 발생했습니다." + e.getMessage());
+        }
+
+    }
 
     public String serializeHand() {
         return game.serializeHand(clientName); // 게임에서 손패 직렬화
@@ -100,20 +101,4 @@ public class ClientHandler implements Runnable {
         out.println(message);
     }
 
-    private void handlePlayCard(String input) {
-        String[] parts = input.split(" ");
-        if (parts.length != 3) {
-            sendMessage("ERROR: Invalid PLAY_CARD message format");
-            return;
-        }
-        String rank = parts[1];
-        String suit = parts[2];
-        Card card = new Card(rank, suit);
-        try {
-            game.playTurn(clientName, card);
-            server.broadcastSubmittedCard(card, clientName);
-        } catch (IllegalStateException e) {
-            sendMessage("ERROR: " + e.getMessage());
-        }
-    }
 }
