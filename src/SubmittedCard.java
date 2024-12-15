@@ -40,5 +40,9 @@ public class SubmittedCard {
         }
         return card.getSuit().equals(topCard.getSuit()) || card.getRank().equals(topCard.getRank());
     }
+
+    public void checkingCard(){
+        System.out.println("현재 제출된 카드 맨 위? : " + this.submittedCards.get(0));
+    }
     
 }

@@ -6,12 +6,12 @@ import java.util.Map;
 
 public class OneCardGameGUI extends JPanel {
     private JTextArea playerListArea;
-    private JPanel handPanel;
     private Client client; // Client 참조 추가
     private JPanel topLeftPanel, topRightPanel, bottomLeftPanel, bottomRightPanel;
     private JPanel centralPanel; // 중앙 패널 참조 추가
     private JLayeredPane layeredPane;
     private Map<String, JPanel> clientPanels = new HashMap<>();
+    private SubmittedCard submittedCard; // 제출된 카드 관리
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -48,23 +48,60 @@ public class OneCardGameGUI extends JPanel {
         return panel;
     }
 
-    public void updateHand(List<Card> hand) {
+    public void updateHand(String playerName, List<Card> hand) {
         SwingUtilities.invokeLater(() -> {
-            handPanel.removeAll(); // 기존 카드 버튼 제거
+            JPanel handPanel = clientPanels.get(playerName);
+            if (handPanel == null) {
+                System.out.println("핸드 패널을 찾을 수 없습니다: " + playerName);
+                return;
+            }
+    
+            // 카드 버튼만 삭제
+            Component[] components = handPanel.getComponents();
+            for (Component comp : components) {
+                if (comp instanceof JButton button && "cardButton".equals(button.getClientProperty("type"))) {
+                    handPanel.remove(button); // 카드 버튼만 삭제
+                }
+            }
+    
+            // 새 카드 버튼 추가
             for (Card card : hand) {
                 JButton cardButton = new JButton(card.toString());
+                cardButton.putClientProperty("type", "cardButton");
+                cardButton.putClientProperty("card", card); // 카드 정보 저장
+    
                 cardButton.addActionListener(e -> {
-                    // 서버로 제출 요청 전송
-                    // Client client = getClientInstance(); // 클라이언트 인스턴스 가져오기
-                    if (client != null) {
-                        client.playCard(card); // 서버로 제출 요청
-                    }
+                    hand.remove(card); // 핸드에서 카드 제거
+                    handPanel.remove(cardButton); // 해당 버튼 제거
+                    updateSubmittedCard(card); // 제출된 카드 갱신
+                    client.playCard(card,hand); // 서버로 카드 제출 요청
+    
+                    // UI 갱신
+                    handPanel.revalidate();
+                    handPanel.repaint();
                 });
+    
                 handPanel.add(cardButton);
             }
-            System.out.println("UI 갱신 완료, 남은 손패: " + hand); // 디버깅 로그 추가
+    
+            System.out.println("UI 갱신 완료, 남은 손패: " + hand);
             handPanel.revalidate();
             handPanel.repaint();
+        });
+    }
+    
+
+    public void updateSubmittedCard(Card card) {
+        SwingUtilities.invokeLater(() -> {
+            for (Component comp : centralPanel.getComponents()) {
+                if (comp instanceof JButton button && "Submitted Card".equals(button.getText())) {
+                    button.setText(""); // 기존 텍스트 제거
+                    button.setIcon(loadCardImage(card)); // 카드 이미지 설정
+                    centralPanel.revalidate();
+                    centralPanel.repaint();
+                    return;
+                }
+            }
         });
     }
 
@@ -130,7 +167,20 @@ public class OneCardGameGUI extends JPanel {
             cardButton.setBorderPainted(false); // 테두리 렌더링 비활성화
             cardButton.setFocusPainted(false); // 포커스 윤곽선 제거
             targetPanel.add(cardButton);
+
+            cardButton.addActionListener(e -> {
+                // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
+                if (client.getName().equals(playerName)) {
+                    System.out.println("클릭한 카드 : " + card + " by client " + client.getName());
+                    client.sendSubmittedCard(card, client.getName());
+                    client.playCard(card, hand);
+                } else {
+                    System.out.println("다른 플레이어의 패널에서 카드를 제출할 수 없습니다.");
+                }
+            });
+
         }
+
         // **닉네임** 위치: 지정된 자표 사용
         JLabel nameLabel = new JLabel(playerName, SwingConstants.CENTER);
         nameLabel.setBounds(nameX - 50, nameY, 100, 20); // 닉네임의 너비 100px로 중앙 정렬
@@ -259,17 +309,17 @@ public class OneCardGameGUI extends JPanel {
 
     public void showEmojiAnimation(String emojiPath, String clientName) {
         System.out.println("[showEmojiAnimation] 호출된 경로: " + emojiPath + ", 클라이언트: " + clientName);
-    
+
         // 이모티콘 이미지를 로드
         ImageIcon emojiIcon = loadEmojiImage(emojiPath, 65, 65); // 원래 크기
         JLabel emojiLabel = new JLabel(emojiIcon);
-    
+
         // 원본 크기 및 확대 크기 설정
         int originalWidth = emojiIcon.getIconWidth();
         int originalHeight = emojiIcon.getIconHeight();
         int expandedWidth = originalWidth + 100; // 확대 크기
         int expandedHeight = originalHeight + 100;
-    
+
         // 이모티콘의 초기 위치를 중앙으로 설정 (클라이언트 패널 위치 기반)
         JPanel clientPanel = clientPanels.get(clientName.trim());
         if (clientPanel == null) {
@@ -278,24 +328,24 @@ public class OneCardGameGUI extends JPanel {
         }
         Point clientPanelLocation = clientPanel.getLocationOnScreen();
         Point layeredPaneLocation = layeredPane.getLocationOnScreen();
-    
+
         // 위치 계산 (JLayeredPane 좌표계 기준으로 변환)
         int emojiX = clientPanelLocation.x - layeredPaneLocation.x + clientPanel.getWidth() / 2 - originalWidth / 2;
         int emojiY = clientPanelLocation.y - layeredPaneLocation.y + clientPanel.getHeight() / 2 - originalHeight / 2;
-    
+
         // 초기 위치와 크기 설정
         emojiLabel.setBounds(emojiX, emojiY, originalWidth, originalHeight);
-    
+
         // JLayeredPane 최상단에 추가
         layeredPane.add(emojiLabel, JLayeredPane.DRAG_LAYER); // 최상단 레이어 사용
         layeredPane.revalidate();
         layeredPane.repaint();
-    
+
         // 1초 후 확대
         Timer expandTimer = new Timer(0, e -> {
             emojiLabel.setBounds(
-                emojiX - 50, emojiY - 50, // 확대 위치 (중심 유지)
-                expandedWidth, expandedHeight // 확대 크기
+                    emojiX - 50, emojiY - 50, // 확대 위치 (중심 유지)
+                    expandedWidth, expandedHeight // 확대 크기
             );
             emojiLabel.setIcon(resizeImage(emojiIcon, expandedWidth, expandedHeight));
             layeredPane.revalidate();
@@ -303,7 +353,7 @@ public class OneCardGameGUI extends JPanel {
         });
         expandTimer.setRepeats(false);
         expandTimer.start();
-    
+
         // 1초 후 원래 크기로 돌아가며 제거
         Timer removeTimer = new Timer(1000, e -> {
             layeredPane.remove(emojiLabel);
@@ -313,22 +363,22 @@ public class OneCardGameGUI extends JPanel {
         removeTimer.setRepeats(false);
         removeTimer.start();
     }
-    
+
     private ImageIcon resizeImage(ImageIcon icon, int maxWidth, int maxHeight) {
         Image img = icon.getImage();
-    
+
         // 원본 크기
         int originalWidth = icon.getIconWidth();
         int originalHeight = icon.getIconHeight();
-    
+
         // 비율 유지하면서 크기 계산
         double widthRatio = (double) maxWidth / originalWidth;
         double heightRatio = (double) maxHeight / originalHeight;
         double scale = Math.min(widthRatio, heightRatio); // 비율이 작은 쪽 기준으로 크기 조정
-    
+
         int newWidth = (int) (originalWidth * scale);
         int newHeight = (int) (originalHeight * scale);
-    
+
         // 리사이즈
         Image scaledImg = img.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
         ImageIcon resizedIcon = new ImageIcon(scaledImg);

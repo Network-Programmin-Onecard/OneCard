@@ -44,7 +44,6 @@ public class Game {
     public synchronized void startGame(List<String> clientNames) {
         Deck deck = new Deck(); // 새로운 덱 생성
         deck.shuffle(); // 덱 셔플
-    
         for (String clientName : clientNames) {
             List<Card> hand = new ArrayList<>(deck.drawCards(8)); // 각 플레이어에게 8장 배분
             playerHands.put(clientName, hand); // 플레이어 손패 저장
