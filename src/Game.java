@@ -32,6 +32,10 @@ public class Game {
         return playerHands.getOrDefault(playerName, new ArrayList<>());
     }
 
+    public SubmittedCard getSubmittedCard(){
+        return this.submittedCards;
+    }
+
     /**
      * 게임 시작 - 플레이어에게 카드 배분
      */
@@ -87,6 +91,19 @@ public class Game {
      */
     public synchronized Card getTopSubmittedCard() {
         return this.submittedCards.getTopCard();
+    }
+
+    public Card drawCardFromDeck() {
+        return deck.dealCard();
+    }
+
+    public void addCardToPlayerHand(String playerName, Card card) {
+        List<Card> hand = playerHands.get(playerName);
+        if (hand != null) {
+            hand.add(card); // 손패에 카드 추가
+        } else {
+            System.out.println("ERROR: 플레이어 " + playerName + "의 손패가 없습니다.");
+        }
     }
 
     /**

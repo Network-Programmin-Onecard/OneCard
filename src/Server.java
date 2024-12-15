@@ -10,7 +10,6 @@ public class Server {
     private boolean gameStateBroadcasted = false; // 게임 상태가 전송되었는지 확인하는 플래그
     String submittedCard;
 
-
     public Server() {
         game = new Game();
     }
@@ -36,7 +35,7 @@ public class Server {
                     new Thread(clientHandler).start();
 
                     // 모든 클라이언트가 연결되었을 때 게임 시작
-                    if (clients.size() == MAX_CLIENTS&& !gameStateBroadcasted) {
+                    if (clients.size() == MAX_CLIENTS && !gameStateBroadcasted) {
                         gameStateBroadcasted = true;
                         new Thread(() -> {
                             try {
@@ -98,13 +97,15 @@ public class Server {
         synchronized (game) {
             List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
             if (!remainingDeck.isEmpty()) {
-                if(game.submittedCards == null){
-                    game.submittedCards.addCard(remainingDeck.get(0));
+                if (game.submittedCards == null) {
+                    // game.submittedCards.addCard(remainingDeck.get(0));
+                    game.getSubmittedCard().addCard(remainingDeck.get(0));
                 }
                 submittedCard = game.submittedCards.getTopCard().toString();
-                String cardDeckTop = remainingDeck.size() > 1 ? remainingDeck.get(1).toString() : "Empty";
+                remainingDeck.remove(0);
+                String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
                 String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
-                System.out.println("Broadcasting Remaining Cards: " + remainingCardsMessage); // 디버깅 출력
+                System.out.println(remainingCardsMessage); // 디버깅 출력
                 for (ClientHandler client : clients) {
                     client.sendMessage(remainingCardsMessage); // REMAINING_CARDS 메시지 전송
                 }
@@ -151,6 +152,16 @@ public class Server {
         } catch (IllegalStateException e) {
             System.out.println("ERROR: " + e.getMessage());
             return false;
+        }
+    }
+
+    public synchronized void handleCardDeck(String name, Card card){
+        try{
+            for (ClientHandler client : clients) {
+                client.sendCardDeckToClient(card, name);
+            }
+        } catch(IllegalStateException e){
+            System.out.println("ERROR: "+e.getMessage());
         }
     }
 
