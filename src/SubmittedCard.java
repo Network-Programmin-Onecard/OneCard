@@ -19,7 +19,7 @@ public class SubmittedCard {
         return null;
     }
 
-    public List<Card> resetPile() {
+    public List<Card> resetPile() {//맨 위 카드 제외 초기화화
         if (submittedCards.size() <= 1) {
             return new ArrayList<>();
         }

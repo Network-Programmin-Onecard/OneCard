@@ -13,6 +13,7 @@ public class OneCardGameGUI extends JPanel {
     private Map<String, JPanel> clientPanels = new HashMap<>();
     private RoundedButton submittedCardButton;
     private RoundedButton cardDeckButton;
+    private Card TopCard;
 
     public OneCardGameGUI(Client client) {
         this.client = client;
@@ -56,7 +57,7 @@ public class OneCardGameGUI extends JPanel {
                 System.out.println("핸드 패널을 찾을 수 없습니다: " + playerName);
                 return;
             }
-    
+
             // 카드 버튼만 삭제
             Component[] components = handPanel.getComponents();
             for (Component comp : components) {
@@ -64,32 +65,31 @@ public class OneCardGameGUI extends JPanel {
                     handPanel.remove(button); // 카드 버튼만 삭제
                 }
             }
-    
+
             // 새 카드 버튼 추가
             for (Card card : hand) {
                 JButton cardButton = new JButton(card.toString());
                 cardButton.putClientProperty("type", "cardButton");
                 cardButton.putClientProperty("card", card); // 카드 정보 저장
-    
+
                 cardButton.addActionListener(e -> {
                     hand.remove(card); // 핸드에서 카드 제거
                     handPanel.remove(cardButton); // 해당 버튼 제거
-                    client.playCard(card,hand, playerName); // 서버로 카드 제출 요청
-    
+                    client.playCard(card, hand, playerName); // 서버로 카드 제출 요청
+
                     // UI 갱신
                     handPanel.revalidate();
                     handPanel.repaint();
                 });
-    
+
                 handPanel.add(cardButton);
             }
-    
+
             System.out.println("UI 갱신 완료, 남은 손패: " + hand);
             handPanel.revalidate();
             handPanel.repaint();
         });
     }
-    
 
     public void updateSubmittedCard(Card card) {
         SwingUtilities.invokeLater(() -> {
@@ -108,7 +108,6 @@ public class OneCardGameGUI extends JPanel {
             }
         });
     }
-    
 
     public void updatePlayerList(String[] players) {
         SwingUtilities.invokeLater(() -> {
@@ -177,13 +176,13 @@ public class OneCardGameGUI extends JPanel {
                 // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
                 if (client.getName().equals(playerName)) {
                     System.out.println("클릭한 카드 : " + card + " by client " + client.getName());
-                    Card topCard = client.requestTopSubmittedCard();
-                    if (topCard == null || topCard.getSuit().equals(card.getSuit()) || topCard.getRank().equals(card.getRank())) {
-                    client.sendSubmittedCard(card, client.getName());
-                    client.playCard(card, hand, playerName);
-                    }
-                    else{
-                        System.out.println("카드 제출 불가: 숫자나 모양이 일치하지 않습니다. (" + topCard + ")");
+                    client.requestTopSubmittedCard();
+                    System.out.println("topCard에 입력된 카드 : " + TopCard);
+                    if (TopCard == null || TopCard.getSuit().equals(card.getSuit())|| TopCard.getRank().equals(card.getRank())) {
+                        client.sendSubmittedCard(card, client.getName());
+                        client.playCard(card, hand, playerName);
+                    } else {
+                        System.out.println("카드 제출 불가: 숫자나 모양이 일치하지 않습니다. (" + TopCard + ")");
                     }
                 } else {
                     System.out.println("다른 플레이어의 패널에서 카드를 제출할 수 없습니다.");
@@ -406,4 +405,8 @@ public class OneCardGameGUI extends JPanel {
         return resizedIcon;
     }
 
+    public Card createCard(String rank, String suit){
+        TopCard = new Card(rank, suit);
+        return TopCard;
+    }
 }
