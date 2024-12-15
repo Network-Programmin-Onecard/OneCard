@@ -92,7 +92,7 @@ public class Server {
     
         // REMAINING_CARDS 메시지 생성 및 전송
         synchronized (game) {
-            List<Card> remainingDeck = game.getSuffledDeck(); // 남은 카드 가져오기
+            List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
             if (!remainingDeck.isEmpty()) {
                 String submittedCard = remainingDeck.get(0).toString();
                 String cardDeckTop = remainingDeck.size() > 1 ? remainingDeck.get(1).toString() : "Empty";
@@ -129,12 +129,13 @@ public class Server {
         }
     }
 
-    public void broadcastSubmittedCard(Card card, String playerName) {
-        synchronized (clients) {
-            System.out.println("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName);
-            for (ClientHandler client : clients) {
-                client.sendSubmittedCardToClient(card, playerName);
-            }
+    public synchronized boolean handleCardSubmission(String name, Card card){
+        try{
+            return game.playTurn(name, card);
+        } catch(IllegalStateException e){
+            System.out.println("ERROR: "+e.getMessage());
+            return false;
         }
     }
+
 }
