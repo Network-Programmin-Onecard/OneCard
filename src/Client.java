@@ -72,10 +72,11 @@ public class Client {
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message); // 게임 상태 파싱 후 업데이트
                 } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
-
                     String[] parts = message.split("\\|");
-                    if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
-                        gui.createCard(parts[1], parts[2]);
+                    if (parts.length == 5) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
+                        // gui.createCard(parts[1], parts[2]);
+                        if (parts[1] == parts[3] || parts[2] == parts[4]){
+                        }
                     }
                 } else {
                     System.out.println("오류 메시지: " + message.substring(6));
@@ -187,6 +188,9 @@ public class Client {
             String rank = parts[1];
             String suit = parts[2];
             Card card = new Card(rank, suit);
+            hand.remove(card);
+            System.out.println("손패에서 제거됨: " + card);
+            SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
             gui.updateSubmittedCard(card);
         } else if (message.startsWith("DRAW_CARD|")) {
             String[] parts = message.split("\\|");
@@ -197,7 +201,7 @@ public class Client {
         } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
             String[] parts = message.split("\\|");
             if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
-                gui.createCard(parts[1], parts[2]);
+                // gui.createCard(parts[1], parts[2]);
             }
         }
     }
@@ -207,9 +211,7 @@ public class Client {
         if (hand.contains(card)) {
             System.out.println("제출 요청: " + card);
             sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName);
-            hand.remove(card);
-            System.out.println("손패에서 제거됨: " + card);
-            SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
+
         } else {
             System.out.println("손패에 없는 카드입니다! 제출 실패: " + card);
         }
