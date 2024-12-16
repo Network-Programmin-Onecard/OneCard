@@ -30,10 +30,10 @@ public class ClientHandler implements Runnable {
 
     }
 
-    public void sendCardDeckToClient(Card CardDeck, String clientName){
+    public void sendCardDeckToClient(Card CardDeck, String clientName) {
         System.out.println("sendCardDeckToClient 정상 실행됨");
-        System.out.println("DRAW_CARD|"+CardDeck.getRank()+"|"+CardDeck.getSuit()+"|"+clientName);
-        sendMessage("DRAW_CARD|"+CardDeck.getRank()+"|"+CardDeck.getSuit()+"|"+clientName);
+        System.out.println("DRAW_CARD|" + CardDeck.getRank() + "|" + CardDeck.getSuit() + "|" + clientName);
+        sendMessage("DRAW_CARD|" + CardDeck.getRank() + "|" + CardDeck.getSuit() + "|" + clientName);
     }
 
     @Override
@@ -58,14 +58,13 @@ public class ClientHandler implements Runnable {
                 } else if (message.startsWith("SUBMITTED_CARD|")) {
                     handleCardSumission(message);
                 } else if (message.startsWith("DRAW_CARD|")) {
-                    System.out.println(message+" 메시지 정상적으로 클라이언트 핸들러에 도착");
+                    System.out.println(message + " 메시지 정상적으로 클라이언트 핸들러에 도착");
                     String playerName = message.split("\\|")[1]; // 플레이어 이름 추출
                     handleDrawCard(playerName);
-                } else if (message.startsWith("TOP_SUBMITTED_CARD")){
+                } else if (message.startsWith("TOP_SUBMITTED_CARD")) {
                     Card topCard = server.getTopSubmittedCard();
                     if (topCard != null) {
                         sendMessage("TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
-                        System.out.println("클라이언트핸들러 sendMessage: TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
                     } else {
                         sendMessage("ERROR|No top card available");
                     }
@@ -86,22 +85,28 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleCardSumission(String message){
-        try{
+    private void handleCardSumission(String message) {
+        try {
             String[] parts = message.split("\\|");
             String rank = parts[1];
             String suit = parts[2];
             String clientName = parts[3];
             Card card = new Card(rank, suit);
+            Card topCard = server.getTopSubmittedCard();
 
-            boolean isGameOver = server.handleCardSubmission(clientName, card);
-            if(isGameOver){
-                server.broadcastMessage(clientName + "(이)가 승리했습니다.");
+            if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
+                sendSubmittedCardToClient(card, clientName);
+                boolean isGameOver = server.handleCardSubmission(clientName, card);
+                if (isGameOver) {
+                    server.broadcastMessage(clientName + "(이)가 승리했습니다.");
+                } else {
+                    server.broadcastGameState();
+                }
+            } else {
+                sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
             }
-            else{
-                server.broadcastGameState();
-            }
-        } catch (Exception e){ 
+
+        } catch (Exception e) {
             sendMessage("ERROR: 카드 제출 중 문제가 발생했습니다." + e.getMessage());
         }
     }
@@ -112,10 +117,10 @@ public class ClientHandler implements Runnable {
             Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
             System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getRemainingDeckSize());
             if (drawnCard != null) {
-                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가      
+                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
                 server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
                 System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
-                System.out.println("카드 덱의 잔여 카드 개수 draw 후후: " + game.getRemainingDeckSize());
+                // server.handleCardDeck(playerName, drawnCard);
                 server.handleCardDeck(playerName);
             } else {
                 System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
