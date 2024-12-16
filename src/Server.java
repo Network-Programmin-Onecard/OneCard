@@ -99,12 +99,7 @@ public class Server {
         synchronized (game) {
             List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
             if (!remainingDeck.isEmpty()) {
-                if (game.submittedCards == null) {
-                    // game.submittedCards.addCard(remainingDeck.get(0));
-                    game.getSubmittedCard().addCard(remainingDeck.get(0));
-                }
                 submittedCard = game.submittedCards.getTopCard().toString();
-                remainingDeck.remove(0);
                 String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
                 String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
                 System.out.println(remainingCardsMessage); // 디버깅 출력
