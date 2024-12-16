@@ -52,6 +52,7 @@ public class Server {
                                 game.startGame(playerNames); // 게임 초기화
                             }
                             broadcastGameState(); // 초기 게임 상태 전송
+                            initializeGameState();
                         }).start();
                     }
                 }
@@ -92,17 +93,13 @@ public class Server {
         for (ClientHandler client : clients) {
             client.sendMessage(gameState); // GAME_STATE 메시지 전송
         }
+    }
 
-        // REMAINING_CARDS 메시지 생성 및 전송
+    private void initializeGameState() {
         synchronized (game) {
             List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
             if (!remainingDeck.isEmpty()) {
-                if (game.submittedCards == null) {
-                    // game.submittedCards.addCard(remainingDeck.get(0));
-                    game.getSubmittedCard().addCard(remainingDeck.get(0));
-                }
                 submittedCard = game.submittedCards.getTopCard().toString();
-                remainingDeck.remove(0);
                 String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
                 String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
                 System.out.println(remainingCardsMessage); // 디버깅 출력
@@ -155,14 +152,14 @@ public class Server {
         }
     }
 
-    public synchronized void handleCardDeck(String name){
+    public synchronized void handleCardDeck(String name) {
         Card card = game.getFirstCardDeck();
-        try{
+        try {
             for (ClientHandler client : clients) {
                 client.sendCardDeckToClient(card, name);
             }
-        } catch(IllegalStateException e){
-            System.out.println("ERROR: "+e.getMessage());
+        } catch (IllegalStateException e) {
+            System.out.println("ERROR: " + e.getMessage());
         }
     }
 
