@@ -176,8 +176,10 @@ public class Server {
             for (ClientHandler client : clients) {
                 client.sendSubmittedCardToClient(card, name);
             }
+            List<Card> remainingDeck = game.getRemainingDeck();
             submittedCard = game.updateSubmittedCard(card).toString();
-            String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + ",";
+            String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
+            String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
             System.out.println("Broadcasting Remaining Cards: " + remainingCardsMessage); // 디버깅 출력
             for (ClientHandler client : clients) {
                 client.sendMessage(remainingCardsMessage); // REMAINING_CARDS 메시지 전송
@@ -250,7 +252,6 @@ public class Server {
                 clientNumber++;
             }
         }
-        System.out.println("*************** 현재 clientNumber : " + clientNumber + " ***********************");
     }
 
     public void QueenAbility() {
@@ -273,7 +274,6 @@ public class Server {
                 clientNumber += 2;
             }
         }
-        System.out.println("*************** 현재 clientNumber : " + clientNumber + " ***********************");
     }
 
     public void JackAbility() {
@@ -282,7 +282,6 @@ public class Server {
         } else if (course == Course.REVERSE) {
             clientNumber --;
         }
-        System.out.println("*************** 현재 clientNumber : " + clientNumber + " ***********************");
     }
 
     public void SevenAbility() {
@@ -293,6 +292,5 @@ public class Server {
         if (game.getDeckSize() == 1) {
             game.getDeck().replenishFromSubmittedCards(game.getSubmittedCard());
         }
-        initializeGameState();
     }
 }

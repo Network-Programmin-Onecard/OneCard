@@ -146,10 +146,11 @@ public class ClientHandler implements Runnable {
     private void handleDrawCard(String playerName) {
         synchronized (game) {
             if (server.isPlayerTurn(clientName)) {
+                server.NextTurn();
                 System.out.println("카드 덱의 잔여 카드 개수 draw 전: " + game.getDeckSize());
                 Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
                 System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getDeckSize());
-                server.isDeckhaveOneCard();
+                server.isDeckhaveOneCard(); //이게 그거 그ㅡㅡㅡㅡㅡㅡ 덱에 카드가 한장이면 submittedcard 에서 맨 윗장 빼고 가져오는거
                 if (drawnCard != null) {
                     game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
                     server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
