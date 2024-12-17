@@ -24,6 +24,10 @@ public class Client {
         return this.name;
     }
 
+    public Socket getSocket() {
+        return this.socket;
+    }
+
     public boolean connect(String ip, int port) {
         try {
             socket = new Socket(ip, port);
@@ -78,8 +82,11 @@ public class Client {
                         if (parts[1] == parts[3] || parts[2] == parts[4]){
                         }
                     }
+                } else if (message.startsWith("GAME_WINNER|")) {
+                    System.out.println("서버 메시지: " + message);
+                    onServerMessageReceived(message);
                 } else {
-                    System.out.println("오류 메시지: " + message.substring(6));
+                    System.out.println("오류 메시지: " + message);
                 }
             }
         } catch (IOException e) {
@@ -203,6 +210,10 @@ public class Client {
             if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
                 // gui.createCard(parts[1], parts[2]);
             }
+        } else if (message.startsWith("GAME_WINNER|")) {
+            String[] parts = message.split("\\|");
+            String winnerClient = parts[1];
+            gui.endingGame(winnerClient);
         }
     }
 

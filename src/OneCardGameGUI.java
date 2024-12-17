@@ -1,4 +1,7 @@
 import java.awt.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.List;
@@ -420,5 +423,47 @@ public class OneCardGameGUI extends JPanel {
         resizedIcon.setDescription(icon.getDescription()); // 경로 정보 유지
         return resizedIcon;
     }
+
+    public void endingGame(String winnerClient) {
+
+        disconnectFromServer();
+
+        // 부모 컨테이너 가져오기
+        Container parent = this.getParent();
+        if (parent == null) {
+            System.out.println("ERROR: 부모 컨테이너를 찾을 수 없습니다.");
+            return;
+        }
+    
+        // 현재 패널을 부모에서 완전히 제거
+        parent.removeAll();
+    
+        // 새로운 ResultPanel 추가
+        ResultPanel resultPanel = new ResultPanel(winnerClient);
+        parent.add(resultPanel);
+    
+        // 부모 컨테이너 갱신
+        parent.revalidate();
+        parent.repaint();
+    }
+
+    private void disconnectFromServer() {
+    try {
+        if (client != null && client.getSocket() != null) {
+            System.out.println("서버와의 연결을 종료합니다...");
+
+            // 서버에 종료 메시지 전송 (선택 사항)
+            PrintWriter out = new PrintWriter(client.getSocket().getOutputStream(), true);
+            out.println("EXIT"); // 서버에 클라이언트 종료 알림
+
+            // 소켓과 스트림 닫기
+            client.getSocket().close();
+            System.out.println("서버와의 연결이 정상적으로 종료되었습니다.");
+        }
+    } catch (IOException e) {
+        System.out.println("서버 연결 종료 중 오류 발생: " + e.getMessage());
+    }
+}
+    
 
 }

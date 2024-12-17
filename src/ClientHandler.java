@@ -69,6 +69,9 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("ERROR|No top card available");
                     }
+                } else if (message.equalsIgnoreCase("EXIT")) {
+                    System.out.println(clientName + "가 연결을 종료했습니다.");
+                    break; // 종료 요청 처리
                 } else {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
@@ -76,13 +79,22 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            // 클라이언트 연결 종료
-            try {
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            closeResources();
             server.removeClient(this); // 서버에서 클라이언트 제거
+            System.out.println("클라이언트 " + clientName + " 연결 종료.");
+        }
+    }
+
+    private void closeResources() {
+        try {
+            if (in != null)
+                in.close();
+            if (out != null)
+                out.close();
+            if (socket != null)
+                socket.close();
+        } catch (IOException e) {
+            System.out.println("리소스 정리 중 오류 발생: " + e.getMessage());
         }
     }
 
@@ -101,7 +113,7 @@ public class ClientHandler implements Runnable {
                     sendSubmittedCardToClient(card, clientName);
                     boolean isGameOver = server.handleCardSubmission(clientName, card);
                     if (isGameOver) {
-                        server.broadcastMessage(clientName + "(이)가 승리했습니다.");
+                        server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
                     } else {
                         server.broadcastGameState();
                     }
