@@ -9,6 +9,7 @@ public class Server {
     private final Game game;
     private boolean gameStateBroadcasted = false; // 게임 상태가 전송되었는지 확인하는 플래그
     String submittedCard;
+    private int clientNumber = 0; // 현재 클라이언트의 순서
 
     public Server() {
         game = new Game();
@@ -166,6 +167,21 @@ public class Server {
     public synchronized Card getTopSubmittedCard() {
         System.out.println("서버에서 클라이언트로 전달할 제출된 카드의 맨 위 카드 : " + game.getTopSubmittedCard());
         return game.getTopSubmittedCard(); // Game 클래스의 getTopSubmittedCard 호출
+    }
+
+    public boolean isPlayerTurn(String playerName){
+        if(clients.get(clientNumber).getClientName().equals(playerName)){
+            System.out.println("현재 순서인 플레이어 이름: " + clients.get(clientNumber).getClientName() +" 번호: " + clientNumber);
+            if(clientNumber == 3){
+                clientNumber = 0;
+            } else {
+                clientNumber++;
+            }
+            return true;
+        } else{
+            System.out.println("현재 플레이어의 턴이 아닙니다.");
+            return false;
+        }
     }
 
 }
