@@ -2,13 +2,28 @@ import java.util.*;
 
 public class Game {
     private final Map<String, List<Card>> playerHands = new HashMap<>(); // 플레이어 이름과 손패를 매핑
-    private final Deck deck; // 덱 객체 (Deck 클래스 사용)
+    private Deck deck; // 덱 객체 (Deck 클래스 사용)
     public SubmittedCard submittedCards; // 제출된 카드 관리 객체
 
     public Game() {
-        this.deck = new Deck(); // 덱 생성
-        this.submittedCards = new SubmittedCard(); // 제출된 카드 관리 객체 생성
-        deck.shuffle(); // 덱 셔플
+        reset();
+    }
+
+    /**
+     * 게임 상태 초기화
+     */
+    public synchronized void reset() {
+        System.out.println("게임 상태를 초기화합니다...");
+        
+        // 덱 및 제출된 카드 초기화
+        this.deck = new Deck();
+        this.submittedCards = new SubmittedCard();
+        deck.shuffle(); // 덱 섞기
+
+        // 플레이어 손패 초기화
+        playerHands.clear();
+
+        System.out.println("게임 상태가 초기화되었습니다.");
     }
 
     /**
@@ -40,6 +55,8 @@ public class Game {
      * 게임 시작 - 플레이어에게 카드 배분
      */
     public synchronized void startGame(List<String> clientNames) {
+        System.out.println("새 게임을 시작합니다...");
+
         // 각 플레이어에게 8장씩 배분
         for (String clientName : clientNames) {
             List<Card> hand = deck.drawCards(8); // 덱에서 8장 추출

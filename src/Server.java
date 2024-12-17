@@ -7,7 +7,6 @@ public class Server {
     private static final int MAX_CLIENTS = 4;
     private final List<ClientHandler> clients = new ArrayList<>();
     private final Game game;
-    private boolean gameStateBroadcasted = false; // 게임 상태가 전송되었는지 확인하는 플래그
     String submittedCard;
 
     public Server() {
@@ -35,25 +34,8 @@ public class Server {
                     new Thread(clientHandler).start();
 
                     // 모든 클라이언트가 연결되었을 때 게임 시작
-                    if (clients.size() == MAX_CLIENTS && !gameStateBroadcasted) {
-                        gameStateBroadcasted = true;
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(100); // 1초 대기
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            synchronized (game) {
-                                List<String> playerNames = new ArrayList<>();
-                                for (ClientHandler client : clients) {
-                                    playerNames.add(client.getClientName());
-                                }
-                                game.startGame(playerNames); // 게임 초기화
-                            }
-                            broadcastGameState(); // 초기 게임 상태 전송
-                            initializeGameState();
-                        }).start();
+                    if (clients.size() == MAX_CLIENTS) {
+                        startNewGame(); // 게임 시작
                     }
                 }
             }
@@ -95,6 +77,37 @@ public class Server {
         }
     }
 
+    private void startNewGame() {
+        // 게임 상태를 초기화하고 시작
+        resetGame(); // 게임 상태 초기화
+        System.out.println("4명의 클라이언트가 접속했습니다. 새로운 게임을 시작합니다.");
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(100); // 0.1초 대기
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            synchronized (game) {
+                List<String> playerNames = new ArrayList<>();
+                for (ClientHandler client : clients) {
+                    playerNames.add(client.getClientName());
+                }
+                game.startGame(playerNames); // 게임 초기화
+            }
+            broadcastGameState(); // 초기 게임 상태 전송
+            initializeGameState();
+        }).start();
+    }
+
+    private void resetGame() {
+        synchronized (game) {
+            game.reset(); // 게임 상태 리셋
+            System.out.println("게임 상태가 초기화되었습니다.");
+        }
+    }
+
     private void initializeGameState() {
         synchronized (game) {
             List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
@@ -113,10 +126,16 @@ public class Server {
     public void removeClient(ClientHandler clientHandler) {
         synchronized (clients) {
             clients.remove(clientHandler);
+            System.out.println("클라이언트가 나갔습니다. 남은 클라이언트 수: " + clients.size());
+
+            // 모든 클라이언트가 나간 경우 게임 상태 초기화
+            if (clients.isEmpty()) {
+                System.out.println("모든 클라이언트가 연결을 종료했습니다. 게임을 초기화합니다.");
+                resetGame(); // 게임 상태 초기화
+            }
         }
         broadcastGameState();
     }
-
     public void broadcastMessage(String message) {
         synchronized (clients) {
             for (ClientHandler client : clients) {
