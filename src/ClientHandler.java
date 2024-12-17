@@ -107,16 +107,22 @@ public class ClientHandler implements Runnable {
             Card card = new Card(rank, suit);
             Card topCard = server.getTopSubmittedCard();
 
-            if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
-                sendSubmittedCardToClient(card, clientName);
-                boolean isGameOver = server.handleCardSubmission(clientName, card);
-                if (isGameOver) {
-                    server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
+            if (server.isPlayerTurn(clientName)) {
+
+                if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
+                    sendSubmittedCardToClient(card, clientName);
+                    boolean isGameOver = server.handleCardSubmission(clientName, card);
+                    if (isGameOver) {
+                        server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
+                    } else {
+                        server.broadcastGameState();
+                    }
                 } else {
-                    server.broadcastGameState();
+                    sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
                 }
+
             } else {
-                sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
+                sendMessage("ERROR|현재 순서가 아님");
             }
 
         } catch (Exception e) {
@@ -126,17 +132,22 @@ public class ClientHandler implements Runnable {
 
     private void handleDrawCard(String playerName) {
         synchronized (game) {
-            System.out.println("카드 덱의 잔여 카드 개수 draw 전전: " + game.getRemainingDeckSize());
-            Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
-            System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getRemainingDeckSize());
-            if (drawnCard != null) {
-                game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
-                server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
-                System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
-                // server.handleCardDeck(playerName, drawnCard);
-                server.handleCardDeck(playerName);
+            if (server.isPlayerTurn(clientName)) {
+
+                System.out.println("카드 덱의 잔여 카드 개수 draw 전전: " + game.getRemainingDeckSize());
+                Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
+                System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getRemainingDeckSize());
+                if (drawnCard != null) {
+                    game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
+                    server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
+                    System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
+                    // server.handleCardDeck(playerName, drawnCard);
+                    server.handleCardDeck(playerName);
+                } else {
+                    System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
+                }
             } else {
-                System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
+                sendMessage("ERROR|현재 순서가 아님");
             }
         }
     }
