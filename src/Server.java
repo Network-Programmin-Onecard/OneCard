@@ -125,6 +125,17 @@ public class Server {
         }
     }
 
+    public void broadcastWinnter(ClientHandler winner){
+        String winnerMessage = "GAME_WINNER|"+winner.getClientName();
+        System.out.println(winnerMessage);
+
+        synchronized(clients){
+            for(ClientHandler client: clients){
+                client.sendMessage(winnerMessage);
+            }
+        }
+    }
+
     public void broadcastEmoji(String emojiPath, String clientName) {
         synchronized (clients) {
             System.out.println("Broadcasted Emoji: " + emojiPath + "|" + clientName);
