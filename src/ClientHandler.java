@@ -107,7 +107,7 @@ public class ClientHandler implements Runnable {
             Card card = new Card(rank, suit);
             Card topCard = server.getTopSubmittedCard();
 
-            if (server.isPlayerTurn(clientName)) {
+            // if (server.isPlayerTurn(clientName)) {
 
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
                     sendSubmittedCardToClient(card, clientName);
@@ -117,9 +117,9 @@ public class ClientHandler implements Runnable {
                     } else {
                         server.broadcastGameState();
                     }
-                } else {
-                    sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
-                }
+                // } else {
+                //     sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
+                // }
 
             } else {
                 sendMessage("ERROR|현재 순서가 아님");
@@ -132,7 +132,7 @@ public class ClientHandler implements Runnable {
 
     private void handleDrawCard(String playerName) {
         synchronized (game) {
-            if (server.isPlayerTurn(clientName)) {
+            // if (server.isPlayerTurn(clientName)) {
 
                 System.out.println("카드 덱의 잔여 카드 개수 draw 전전: " + game.getRemainingDeckSize());
                 Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
@@ -146,9 +146,9 @@ public class ClientHandler implements Runnable {
                 } else {
                     System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
                 }
-            } else {
-                sendMessage("ERROR|현재 순서가 아님");
-            }
+            // } else {
+            //     sendMessage("ERROR|현재 순서가 아님");
+            // }
         }
     }
 
