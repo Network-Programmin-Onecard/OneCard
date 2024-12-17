@@ -51,6 +51,10 @@ public class Game {
         return this.submittedCards;
     }
 
+    public Deck getDeck(){
+        return this.deck;
+    }
+
     /**
      * 게임 시작 - 플레이어에게 카드 배분
      */
@@ -134,7 +138,7 @@ public class Game {
     /**
      * 덱에 남은 카드 수 반환
      */
-    public synchronized int getRemainingDeckSize() {
+    public synchronized int getDeckSize() {
         return deck.size();
     }
 
@@ -145,5 +149,9 @@ public class Game {
     public String updateSubmittedCard(Card card){
         submittedCards.addCard(card);
         return getTopSubmittedCard().toString();
+    }
+
+    public void SubmittedCardToDeck(){
+        deck.replenishFromSubmittedCards(this.submittedCards);
     }
 }
