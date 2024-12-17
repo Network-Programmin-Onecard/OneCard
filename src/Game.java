@@ -3,7 +3,7 @@ import java.util.*;
 public class Game {
     private final Map<String, List<Card>> playerHands = new HashMap<>(); // 플레이어 이름과 손패를 매핑
     private Deck deck; // 덱 객체 (Deck 클래스 사용)
-    public SubmittedCard submittedCards; // 제출된 카드 관리 객체
+    private SubmittedCard submittedCards; // 제출된 카드 관리 객체
 
     public Game() {
         reset();
