@@ -63,9 +63,11 @@ public class Deck {
         // 덱이 비었거나 카드가 1장만 남은 경우
         if (size() <= 1) {
             Card card = getFirstCard();
-            cards = null;
             List<Card> returnedCards = submittedCard.resetFile(); // 제출된 카드에서 나머지 카드 가져옴
             if (!returnedCards.isEmpty()) {
+                if (cards == null) { // cards가 null이면 새로 초기화
+                    cards = new ArrayList<>();
+                }
                 cards.addAll(returnedCards); // 덱에 추가
                 shuffle(); // 셔플
                 Card returnlastCard = cards.get(0);
