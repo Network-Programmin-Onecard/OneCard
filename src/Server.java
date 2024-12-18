@@ -31,8 +31,9 @@ public class Server {
                     }
 
                     ClientHandler clientHandler = new ClientHandler(clientSocket, this, game);
-                    clients.add(clientHandler);
                     new Thread(clientHandler).start();
+                    clients.add(clientHandler);
+                    System.out.println("클라이언트 추가됨. 게임 시작 전전: " + clients.size()); // 로그 추가
 
                     // 모든 클라이언트가 연결되었을 때 게임 시작
                     if (clients.size() == MAX_CLIENTS) {
@@ -105,6 +106,7 @@ public class Server {
     private void resetGame() {
         synchronized (game) {
             game.reset(); // 게임 상태 리셋
+            clientNumber = 0;
             System.out.println("게임 상태가 초기화되었습니다.");
         }
     }
