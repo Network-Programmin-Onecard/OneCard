@@ -12,7 +12,7 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
     private String clientName;
     private static final Set<String> clientNames = Collections.synchronizedSet(new HashSet<>());
-    private static Card topCard = null;
+    private static Card topCard;
 
     public static void resetTopCard(){
         topCard = null;
@@ -35,15 +35,13 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendSubmittedCardToClient(Card playerSubmittedCard, String clientName, Card newCard) {
+        System.out.println("sendSubmittedCardtoClient 전 값 확인: " + playerSubmittedCard+","+newCard);
         if (newCard == null) {
-            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|"
-                    + clientName);
+            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|" + "NONE");
         }
         else {
-            sendMessage("SUBMITTED_CARD|" + newCard.getRank() + "|" + newCard.getSuit() + "|"
-                    + clientName);
+            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|" + newCard.getSuit());
         }
-
     }
 
     public void sendCardDeckToClient(Card CardDeck, String clientName) {
@@ -97,13 +95,6 @@ public class ClientHandler implements Runnable {
                     System.out.println(message + " 메시지 정상적으로 클라이언트 핸들러에 도착");
                     String playerName = message.split("\\|")[1]; // 플레이어 이름 추출
                     handleDrawCard(playerName);
-                } else if (message.startsWith("TOP_SUBMITTED_CARD")) {
-                    if (topCard == null) {
-                        topCard = server.getTopSubmittedCard();
-                        System.out.println("topCard 설정 완료: " + topCard);
-                    } else if (topCard != null) {
-                        sendMessage("TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
-                    }
                 } else if (message.equalsIgnoreCase("EXIT")) {
                     System.out.println(clientName + "가 연결을 종료했습니다.");
                     break; // 종료 요청 처리
@@ -149,20 +140,19 @@ public class ClientHandler implements Runnable {
             String newCard_suit = parts[4];
             Card card = new Card(rank, suit);
             System.out.println("handleCardSumission 실행 전 topCard 값: " + topCard);
-            Card topCard = server.getTopSubmittedCard();
             if (server.isPlayerTurn(clientName)) {
-
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
                     server.NextTurn();
                     if (card.getRank().equals("7")) {
                         Card newCard = new Card("7", newCard_suit);
+                        System.out.println("sendSubmittedCardToClient 전 newCard 값: " + newCard);
                         game.getSubmittedCard().addCard(newCard); // 제출 카드 갱신 -> 기준 변경 안됨 문제
-                        sendSubmittedCardToClient(card, clientName, newCard); // 클라이언트에게 전송 -> 손패 삭제 문제
+                        sendSubmittedCardToClient(card, clientName, newCard);
+                        card = newCard;
+                        topCard.setSuit(newCard_suit);
                     } else {
                         // 다른 Rank에 따른 처리
-                        if (card.getRank().equals("A")) {
-                            // A 카드 처리
-                        } else if (card.getRank().equals("K")) {
+                        if (card.getRank().equals("K")) {
                             server.KingAbility();
                         } else if (card.getRank().equals("J")) {
                             server.JackAbility();

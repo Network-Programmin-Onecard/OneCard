@@ -94,6 +94,7 @@ public class OneCardGameGUI extends JPanel {
     }
 
     public void updateSubmittedCard(Card card) {
+        System.out.println("updateSubmittedCard를 위한 Card 값: " + card);
         SwingUtilities.invokeLater(() -> {
             if (submittedCardButton != null) {
                 ImageIcon cardImage = loadCentralCardImage(card);
