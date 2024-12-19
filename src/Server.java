@@ -242,10 +242,6 @@ public class Server {
         }
     }
 
-    public void AceAbility() {
-
-    }
-
     public void KingAbility() {
         if (course == Course.SEQUENCE) {
             if (clientNumber == 0) {
@@ -304,7 +300,7 @@ public class Server {
 
     }
 
-    public synchronized void isDeckhaveOneCard() { // ******************* 수정필요 ********************
+    public synchronized void isDeckhaveOneCard() {
         if (game.getDeckSize() == 1) {
             game.getDeck().replenishFromSubmittedCards(game.getSubmittedCard());
         }

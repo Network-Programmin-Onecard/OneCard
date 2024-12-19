@@ -113,7 +113,6 @@ public class ClientHandler implements Runnable {
                 server.removeClient(this);
                 System.out.println("클라이언트 " + clientName + " 연결 종료.");
                 System.out.println("현재 클라이언트 이름 리스트: " + clientNames); // 로그 출력
-
             }
         }
     }
@@ -148,10 +147,8 @@ public class ClientHandler implements Runnable {
                     if (card.getRank().equals("7")) {
                         newCard = new Card("7", newCard_suit);
                         game.getSubmittedCard().addCard(card); // 제출 카드 갱신
-                        //sendSubmittedCardToClient(card, clientName, newCard);
                         topCard.setSuit(newCard_suit);
                     } else {
-                        // 다른 Rank에 따른 처리
                         if (card.getRank().equals("K")) {
                             server.KingAbility();
                         } else if (card.getRank().equals("J")) {
@@ -161,7 +158,6 @@ public class ClientHandler implements Runnable {
                         }
                         // 공통 처리
                         game.getSubmittedCard().addCard(card);
-                        //sendSubmittedCardToClient(card, clientName, null);
                     }
                     boolean isGameOver = server.handleCardSubmission(clientName, card, newCard);
 
@@ -173,11 +169,9 @@ public class ClientHandler implements Runnable {
                 } else {
                     sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
                 }
-
             } else {
                 sendMessage("ERROR|현재 순서가 아님");
             }
-
         } catch (Exception e) {
             sendMessage("ERROR: 카드 제출 중 문제가 발생했습니다." + e.getMessage());
         }
@@ -214,5 +208,4 @@ public class ClientHandler implements Runnable {
     public void sendMessage(String message) {
         out.println(message);
     }
-
 }

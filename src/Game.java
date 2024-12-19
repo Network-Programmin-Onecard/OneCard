@@ -85,9 +85,6 @@ public class Game {
         // 손패에서 카드 제거 및 제출된 카드 스택에 추가
         hand.remove(card);
 
-        // 덱 상태 확인 및 보충
-        // deck.replenishFromSubmittedCards(submittedCards);
-
         // 손패가 비었으면 게임 종료
         return hand.isEmpty();
     }
