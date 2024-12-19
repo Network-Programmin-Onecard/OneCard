@@ -9,6 +9,10 @@ public class Card {
         this.suit = suit;
     }
 
+    public void setRank(String newRank){
+        this.rank = newRank;
+    }
+
     public void setSuit(String newSuit){
         this.suit = newSuit;
     }

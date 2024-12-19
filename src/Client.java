@@ -34,7 +34,7 @@ public class Client {
 
             // 서버에 이름 전송
             out.println(userName);
-            Thread.sleep(300);
+            Thread.sleep(500);
 
             String response = in.readLine();
             System.out.println("서버 응답 수신: " + response); // 디버깅
