@@ -34,7 +34,7 @@ public class Client {
 
             // 서버에 이름 전송
             out.println(userName);
-            socket.setSoTimeout(30000);
+            Thread.sleep(300);
 
             String response = in.readLine();
             System.out.println("서버 응답 수신: " + response); // 디버깅
@@ -54,7 +54,7 @@ public class Client {
             new Thread(this::receiveMessages).start();
             return true;
 
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return false;
         }
@@ -184,10 +184,6 @@ public class Client {
         System.out.println("card_deck 가져간 플레이어: " + playerName);
     }
 
-    public void requestTopSubmittedCard() {
-        sendMessage("TOP_SUBMITTED_CARD"); // 서버에 카드 정보 요청
-    }
-
     public void onServerMessageReceived(String message) {
         System.out.println("서버로부터 메시지 받는거 클라이언트에서 확인: " + message);
         if (message.startsWith("EMOJI|")) {
@@ -200,11 +196,18 @@ public class Client {
             String[] parts = message.split("\\|");
             String rank = parts[1];
             String suit = parts[2];
+            String newSuit = parts[3];
+            System.out.println("확인용: " + rank + "," + suit + "," + newSuit);
             Card card = new Card(rank, suit);
             hand.remove(card);
             System.out.println("손패에서 제거됨: " + card);
             SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
-            gui.updateSubmittedCard(card);
+            if (newSuit != "NONE") {
+                gui.updateSubmittedCard(card);
+            } else {
+                Card newCard = new Card(rank, newSuit);
+                gui.updateSubmittedCard(newCard);
+            }
         } else if (message.startsWith("DRAW_CARD|")) {
             String[] parts = message.split("\\|");
             String rank = parts[1];

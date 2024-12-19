@@ -9,6 +9,10 @@ public class Card {
         this.suit = suit;
     }
 
+    public void setSuit(String newSuit){
+        this.suit = newSuit;
+    }
+    
     public String getRank() {
         return rank;
     }
