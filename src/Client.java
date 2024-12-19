@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class Client {
@@ -11,10 +12,6 @@ public class Client {
     private List<Card> hand = new ArrayList<>(); // 플레이어의 손패
     private OneCardGameGUI gui; // GUI 업데이트를 위한 참조
     private Card cardDeckTop;
-
-    public Client(String name) {
-        this.name = name;
-    }
 
     public void setGUI(OneCardGameGUI gui) {
         this.gui = gui;
@@ -28,19 +25,35 @@ public class Client {
         return this.socket;
     }
 
-    public boolean connect(String ip, int port) {
+    public boolean connect(String ip, int port, String userName) {
         try {
             socket = new Socket(ip, port);
+            System.out.println("서버 연결 성공"); // 디버깅
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
             // 서버에 이름 전송
-            out.println(name);
+            out.println(userName);
+            socket.setSoTimeout(30000);
+        
+            String response = in.readLine();
+            System.out.println("서버 응답 수신: " + response); // 디버깅
 
+            if (response != null && response.startsWith("NAME_ERROR")) {
+                // 이름 중복 처리
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(null,
+                            "입력한 이름이 이미 사용 중입니다. 다른 이름을 입력하세요.",
+                            "이름 중복", JOptionPane.WARNING_MESSAGE);
+                });
+                return false; // 연결 실패
+            }
+
+            this.name = userName;
             // 서버 응답 처리 스레드 시작
             new Thread(this::receiveMessages).start();
-
             return true;
+
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -79,7 +92,7 @@ public class Client {
                     String[] parts = message.split("\\|");
                     if (parts.length == 5) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
                         // gui.createCard(parts[1], parts[2]);
-                        if (parts[1] == parts[3] || parts[2] == parts[4]){
+                        if (parts[1] == parts[3] || parts[2] == parts[4]) {
                         }
                     }
                 } else if (message.startsWith("GAME_WINNER|")) {

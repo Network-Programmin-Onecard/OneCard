@@ -1,5 +1,8 @@
 import java.io.*;
 import java.net.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -8,6 +11,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
     private String clientName;
+    private static final Set<String> clientNames = Collections.synchronizedSet(new HashSet<>());
 
     public ClientHandler(Socket socket, Server server, Game game) {
         this.socket = socket;
@@ -39,9 +43,25 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
+        boolean isClientAdded = false;
         try {
             // 클라이언트의 이름을 수신
             clientName = in.readLine();
+
+            synchronized (clientNames) {
+                if (clientNames.contains(clientName)) {
+                    out.println("NAME_ERROR|이름이 이미 사용 중입니다.");
+                    server.removeClient(this); // 클라이언트 핸들러 제거
+                    return;
+                } else {
+                    clientNames.add(clientName);
+                    isClientAdded = true;
+                    out.println("WELCOME|" + clientName);
+                    System.out.println("이름 추가됨: " + clientName);
+                    System.out.println("현재 클라이언트 이름 리스트: " + clientNames); // 로그 출력
+                }
+            }
+
             System.out.println("클라이언트 연결: " + clientName);
 
             // 클라이언트로부터 메시지를 계속 수신
@@ -80,8 +100,15 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         } finally {
             closeResources();
-            server.removeClient(this); // 서버에서 클라이언트 제거
-            System.out.println("클라이언트 " + clientName + " 연결 종료.");
+            if (isClientAdded) { // 목록에 추가된 클라이언트만 제거
+                synchronized (clientNames) {
+                    clientNames.remove(clientName);
+                }
+                server.removeClient(this);
+                System.out.println("클라이언트 " + clientName + " 연결 종료.");
+                System.out.println("현재 클라이언트 이름 리스트: " + clientNames); // 로그 출력
+
+            }
         }
     }
 
