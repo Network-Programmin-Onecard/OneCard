@@ -220,7 +220,7 @@ public class Server {
         }
     }
 
-    public void NextTurn(){
+    public void NextTurn() {
         if (course == Course.SEQUENCE) {
             if (clientNumber == 3) {
                 clientNumber = 0;
@@ -261,7 +261,7 @@ public class Server {
             course = Course.REVERSE;
             if (clientNumber == 0) {
                 clientNumber = 2;
-            } else if(clientNumber == 1){
+            } else if (clientNumber == 1) {
                 clientNumber = 3;
             } else {
                 clientNumber -= 2;
@@ -270,7 +270,7 @@ public class Server {
             course = Course.SEQUENCE;
             if (clientNumber == 3) {
                 clientNumber = 1;
-            } else if(clientNumber == 2){
+            } else if (clientNumber == 2) {
                 clientNumber = 0;
             } else {
                 clientNumber += 2;
@@ -280,9 +280,17 @@ public class Server {
 
     public void JackAbility() {
         if (course == Course.SEQUENCE) {
-            clientNumber ++;
+            if (clientNumber == 3) {
+                clientNumber = 0;
+            } else {
+                clientNumber++;
+            }
         } else if (course == Course.REVERSE) {
-            clientNumber --;
+            if (clientNumber == 0) {
+                clientNumber = 3;
+            } else {
+                clientNumber--;
+            }
         }
     }
 
