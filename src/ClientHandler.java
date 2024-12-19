@@ -12,6 +12,11 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
     private String clientName;
     private static final Set<String> clientNames = Collections.synchronizedSet(new HashSet<>());
+    private static Card topCard = null;
+
+    public static void resetTopCard(){
+        topCard = null;
+    }
 
     public ClientHandler(Socket socket, Server server, Game game) {
         this.socket = socket;
@@ -29,9 +34,15 @@ public class ClientHandler implements Runnable {
         sendMessage("EMOJI|" + emojiPath + "|" + clientName); // "EMOJI|경로" 형식으로 클라이언트로 전송
     }
 
-    public void sendSubmittedCardToClient(Card playerSubmittedCard, String clientName) {
-        sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|"
-                + clientName); //
+    public void sendSubmittedCardToClient(Card playerSubmittedCard, String clientName, Card newCard) {
+        if (newCard == null) {
+            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|"
+                    + clientName);
+        }
+        else {
+            sendMessage("SUBMITTED_CARD|" + newCard.getRank() + "|" + newCard.getSuit() + "|"
+                    + clientName);
+        }
 
     }
 
@@ -77,17 +88,21 @@ public class ClientHandler implements Runnable {
                     String clientName = parts[2];
                     server.broadcastEmoji(emojiPath, clientName); // 다른 클라이언트로 이모티콘 브로드캐스트
                 } else if (message.startsWith("SUBMITTED_CARD|")) {
+                    if (topCard == null) {
+                        topCard = server.getTopSubmittedCard();
+                        System.out.println("topCard 설정 완료: " + topCard);
+                    }
                     handleCardSumission(message);
                 } else if (message.startsWith("DRAW_CARD|")) {
                     System.out.println(message + " 메시지 정상적으로 클라이언트 핸들러에 도착");
                     String playerName = message.split("\\|")[1]; // 플레이어 이름 추출
                     handleDrawCard(playerName);
                 } else if (message.startsWith("TOP_SUBMITTED_CARD")) {
-                    Card topCard = server.getTopSubmittedCard();
-                    if (topCard != null) {
+                    if (topCard == null) {
+                        topCard = server.getTopSubmittedCard();
+                        System.out.println("topCard 설정 완료: " + topCard);
+                    } else if (topCard != null) {
                         sendMessage("TOP_SUBMITTED_CARD|" + topCard.getRank() + "|" + topCard.getSuit());
-                    } else {
-                        sendMessage("ERROR|No top card available");
                     }
                 } else if (message.equalsIgnoreCase("EXIT")) {
                     System.out.println(clientName + "가 연결을 종료했습니다.");
@@ -131,26 +146,33 @@ public class ClientHandler implements Runnable {
             String rank = parts[1];
             String suit = parts[2];
             String clientName = parts[3];
+            String newCard_suit = parts[4];
             Card card = new Card(rank, suit);
+            System.out.println("handleCardSumission 실행 전 topCard 값: " + topCard);
             Card topCard = server.getTopSubmittedCard();
-            sendMessage("ERROR|\n클릭한 카드 : " + card + "\n topcard : " + topCard );
             if (server.isPlayerTurn(clientName)) {
 
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
                     server.NextTurn();
-                    if(card.getRank().equals("A")){
-
-                    } else if(card.getRank().equals("K")){
-                        server.KingAbility();
-                    } else if(card.getRank().equals("J")){
-                        server.JackAbility();
-                    } else if(card.getRank().equals("Q")){
-                        server.QueenAbility();
-                    } else if(card.getRank().equals("7")){
-
+                    if (card.getRank().equals("7")) {
+                        Card newCard = new Card("7", newCard_suit);
+                        game.getSubmittedCard().addCard(newCard); // 제출 카드 갱신 -> 기준 변경 안됨 문제
+                        sendSubmittedCardToClient(card, clientName, newCard); // 클라이언트에게 전송 -> 손패 삭제 문제
+                    } else {
+                        // 다른 Rank에 따른 처리
+                        if (card.getRank().equals("A")) {
+                            // A 카드 처리
+                        } else if (card.getRank().equals("K")) {
+                            server.KingAbility();
+                        } else if (card.getRank().equals("J")) {
+                            server.JackAbility();
+                        } else if (card.getRank().equals("Q")) {
+                            server.QueenAbility();
+                        }
+                        // 공통 처리
+                        game.getSubmittedCard().addCard(card);
+                        sendSubmittedCardToClient(card, clientName, null);
                     }
-                    sendSubmittedCardToClient(card, clientName);
-                    game.getSubmittedCard().addCard(card);
                     boolean isGameOver = server.handleCardSubmission(clientName, card);
                     if (isGameOver) {
                         server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
@@ -177,7 +199,7 @@ public class ClientHandler implements Runnable {
                 System.out.println("카드 덱의 잔여 카드 개수 draw 전: " + game.getDeckSize());
                 Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
                 System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getDeckSize());
-                server.isDeckhaveOneCard(); //이게 그거 그ㅡㅡㅡㅡㅡㅡ 덱에 카드가 한장이면 submittedcard 에서 맨 윗장 빼고 가져오는거
+                server.isDeckhaveOneCard(); // 이게 그거 그ㅡㅡㅡㅡㅡㅡ 덱에 카드가 한장이면 submittedcard 에서 맨 윗장 빼고 가져오는거
                 if (drawnCard != null) {
                     game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
                     server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트

@@ -35,7 +35,7 @@ public class Client {
             // 서버에 이름 전송
             out.println(userName);
             socket.setSoTimeout(30000);
-        
+
             String response = in.readLine();
             System.out.println("서버 응답 수신: " + response); // 디버깅
 
@@ -88,13 +88,6 @@ public class Client {
                 } else if (message.startsWith("DRAW_CARD|")) {
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message); // 게임 상태 파싱 후 업데이트
-                } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
-                    String[] parts = message.split("\\|");
-                    if (parts.length == 5) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
-                        // gui.createCard(parts[1], parts[2]);
-                        if (parts[1] == parts[3] || parts[2] == parts[4]) {
-                        }
-                    }
                 } else if (message.startsWith("GAME_WINNER|")) {
                     System.out.println("서버 메시지: " + message);
                     onServerMessageReceived(message);
@@ -218,11 +211,6 @@ public class Client {
             String suit = parts[2];
             Card card = new Card(rank, suit);
             gui.updateDeckCard(card);
-        } else if (message.startsWith("TOP_SUBMITTED_CARD|")) {
-            String[] parts = message.split("\\|");
-            if (parts.length == 3) { // 예: "TOP_SUBMITTED_CARD|Rank|Suit"
-                // gui.createCard(parts[1], parts[2]);
-            }
         } else if (message.startsWith("GAME_WINNER|")) {
             String[] parts = message.split("\\|");
             String winnerClient = parts[1];
@@ -231,11 +219,15 @@ public class Client {
     }
 
     // 카드 제출 요청
-    public void playCard(Card card, List<Card> hand, String playerName) {
+    public void playCard(Card card, List<Card> hand, String playerName, Card newCard) {
         if (hand.contains(card)) {
-            System.out.println("제출 요청: " + card);
-            sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName);
-
+            if (newCard == null) {
+                System.out.println("제출 요청: " + card);
+                sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName + "|NONE");
+            } else {
+                System.out.println("제출 요청: " + newCard);
+                sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + playerName + "|" + newCard.getSuit());
+            }
         } else {
             System.out.println("손패에 없는 카드입니다! 제출 실패: " + card);
         }
