@@ -133,11 +133,24 @@ public class ClientHandler implements Runnable {
             String clientName = parts[3];
             Card card = new Card(rank, suit);
             Card topCard = server.getTopSubmittedCard();
-
-            if (server.isPlayerTurn(clientName)) {
+            sendMessage("ERROR|\n클릭한 카드 : " + card + "\n topcard : " + topCard );
+            // if (server.isPlayerTurn(clientName)) {
 
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
+                    server.NextTurn();
+                    if(card.getRank().equals("A")){
+
+                    } else if(card.getRank().equals("K")){
+                        server.KingAbility();
+                    } else if(card.getRank().equals("J")){
+                        server.JackAbility();
+                    } else if(card.getRank().equals("Q")){
+                        server.QueenAbility();
+                    } else if(card.getRank().equals("7")){
+
+                    }
                     sendSubmittedCardToClient(card, clientName);
+                    game.getSubmittedCard().addCard(card);
                     boolean isGameOver = server.handleCardSubmission(clientName, card);
                     if (isGameOver) {
                         server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
@@ -148,9 +161,9 @@ public class ClientHandler implements Runnable {
                     sendMessage("ERROR|카드의 Rank나 Suit값이 틀림");
                 }
 
-            } else {
-                sendMessage("ERROR|현재 순서가 아님");
-            }
+            // } else {
+            //     sendMessage("ERROR|현재 순서가 아님");
+            // }
 
         } catch (Exception e) {
             sendMessage("ERROR: 카드 제출 중 문제가 발생했습니다." + e.getMessage());
@@ -159,11 +172,12 @@ public class ClientHandler implements Runnable {
 
     private void handleDrawCard(String playerName) {
         synchronized (game) {
-            if (server.isPlayerTurn(clientName)) {
-
-                System.out.println("카드 덱의 잔여 카드 개수 draw 전전: " + game.getRemainingDeckSize());
+            // if (server.isPlayerTurn(clientName)) {
+                server.NextTurn();
+                System.out.println("카드 덱의 잔여 카드 개수 draw 전: " + game.getDeckSize());
                 Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
-                System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getRemainingDeckSize());
+                System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getDeckSize());
+                server.isDeckhaveOneCard(); //이게 그거 그ㅡㅡㅡㅡㅡㅡ 덱에 카드가 한장이면 submittedcard 에서 맨 윗장 빼고 가져오는거
                 if (drawnCard != null) {
                     game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
                     server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
@@ -173,9 +187,9 @@ public class ClientHandler implements Runnable {
                 } else {
                     System.out.println("ERROR: Deck에 남은 카드가 없습니다.");
                 }
-            } else {
-                sendMessage("ERROR|현재 순서가 아님");
-            }
+            // } else {
+            //     sendMessage("ERROR|현재 순서가 아님");
+            // }
         }
     }
 

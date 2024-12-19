@@ -2,6 +2,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+enum Course {
+    SEQUENCE, REVERSE;
+}
+
 public class Server {
     private static final int PORT = 30000;
     private static final int MAX_CLIENTS = 4;
@@ -9,6 +13,7 @@ public class Server {
     private final Game game;
     String submittedCard;
     private int clientNumber = 0; // 현재 클라이언트의 순서
+    private Course course = Course.SEQUENCE;
 
     public Server() {
         game = new Game();
@@ -115,7 +120,7 @@ public class Server {
         synchronized (game) {
             List<Card> remainingDeck = game.getRemainingDeck(); // 남은 카드 가져오기
             if (!remainingDeck.isEmpty()) {
-                submittedCard = game.submittedCards.getTopCard().toString();
+                submittedCard = game.getSubmittedCard().getTopCard().toString();
                 String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
                 String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
                 System.out.println(remainingCardsMessage); // 디버깅 출력
@@ -139,6 +144,7 @@ public class Server {
         }
         broadcastGameState();
     }
+
     public void broadcastMessage(String message) {
         synchronized (clients) {
             for (ClientHandler client : clients) {
@@ -147,12 +153,12 @@ public class Server {
         }
     }
 
-    public void broadcastWinnter(ClientHandler winner){
-        String winnerMessage = "GAME_WINNER|"+winner.getClientName();
+    public void broadcastWinnter(ClientHandler winner) {
+        String winnerMessage = "GAME_WINNER|" + winner.getClientName();
         System.out.println(winnerMessage);
 
-        synchronized(clients){
-            for(ClientHandler client: clients){
+        synchronized (clients) {
+            for (ClientHandler client : clients) {
                 client.sendMessage(winnerMessage);
             }
         }
@@ -172,8 +178,10 @@ public class Server {
             for (ClientHandler client : clients) {
                 client.sendSubmittedCardToClient(card, name);
             }
+            List<Card> remainingDeck = game.getRemainingDeck();
             submittedCard = game.updateSubmittedCard(card).toString();
-            String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + ",";
+            String cardDeckTop = remainingDeck.size() > 0 ? remainingDeck.get(0).toString() : "Empty";
+            String remainingCardsMessage = "REMAINING_CARDS:" + submittedCard + "," + cardDeckTop;
             System.out.println("Broadcasting Remaining Cards: " + remainingCardsMessage); // 디버깅 출력
             for (ClientHandler client : clients) {
                 client.sendMessage(remainingCardsMessage); // REMAINING_CARDS 메시지 전송
@@ -201,19 +209,90 @@ public class Server {
         return game.getTopSubmittedCard(); // Game 클래스의 getTopSubmittedCard 호출
     }
 
-    public boolean isPlayerTurn(String playerName){
-        if(clients.get(clientNumber).getClientName().equals(playerName)){
-            System.out.println("현재 순서인 플레이어 이름: " + clients.get(clientNumber).getClientName() +" 번호: " + clientNumber);
-            if(clientNumber == 3){
-                clientNumber = 0;
-            } else {
-                clientNumber++;
-            }
+    public boolean isPlayerTurn(String playerName) {
+        if (clients.get(clientNumber).getClientName().equals(playerName)) {
+            System.out.println("현재 순서인 플레이어 이름: " + clients.get(clientNumber).getClientName() + " 번호: " + clientNumber);
+            System.out.println("*************** 현재 clientNumber : " + clientNumber + " ***********************");
             return true;
-        } else{
+        } else {
             System.out.println("현재 플레이어의 턴이 아닙니다.");
             return false;
         }
     }
 
+    public void NextTurn(){
+        if (course == Course.SEQUENCE) {
+            if (clientNumber == 3) {
+                clientNumber = 0;
+            } else {
+                clientNumber++;
+            }
+        } else if (course == Course.REVERSE) {
+            if (clientNumber == 0) {
+                clientNumber = 3;
+            } else {
+                clientNumber--;
+            }
+        }
+    }
+
+    public void AceAbility() {
+
+    }
+
+    public void KingAbility() {
+        if (course == Course.SEQUENCE) {
+            if (clientNumber == 0) {
+                clientNumber = 3;
+            } else {
+                clientNumber--;
+            }
+        } else if (course == Course.REVERSE) {
+            if (clientNumber == 3) {
+                clientNumber = 0;
+            } else {
+                clientNumber++;
+            }
+        }
+    }
+
+    public void QueenAbility() {
+        if (course == Course.SEQUENCE) {
+            course = Course.REVERSE;
+            if (clientNumber == 0) {
+                clientNumber = 2;
+            } else if(clientNumber == 1){
+                clientNumber = 3;
+            } else {
+                clientNumber -= 2;
+            }
+        } else {
+            course = Course.SEQUENCE;
+            if (clientNumber == 3) {
+                clientNumber = 1;
+            } else if(clientNumber == 2){
+                clientNumber = 0;
+            } else {
+                clientNumber += 2;
+            }
+        }
+    }
+
+    public void JackAbility() {
+        if (course == Course.SEQUENCE) {
+            clientNumber ++;
+        } else if (course == Course.REVERSE) {
+            clientNumber --;
+        }
+    }
+
+    public void SevenAbility() {
+
+    }
+
+    public synchronized void isDeckhaveOneCard() { // ******************* 수정필요 ********************
+        if (game.getDeckSize() == 1) {
+            game.getDeck().replenishFromSubmittedCards(game.getSubmittedCard());
+        }
+    }
 }
