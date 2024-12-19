@@ -112,6 +112,7 @@ public class Server {
         synchronized (game) {
             game.reset(); // 게임 상태 리셋
             clientNumber = 0;
+            ClientHandler.resetTopCard();
             System.out.println("게임 상태가 초기화되었습니다.");
         }
     }
@@ -176,7 +177,7 @@ public class Server {
     public synchronized boolean handleCardSubmission(String name, Card card) {
         try {
             for (ClientHandler client : clients) {
-                client.sendSubmittedCardToClient(card, name);
+                client.sendSubmittedCardToClient(card, name, null);
             }
             List<Card> remainingDeck = game.getRemainingDeck();
             submittedCard = game.updateSubmittedCard(card).toString();

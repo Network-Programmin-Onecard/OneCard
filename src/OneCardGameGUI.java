@@ -77,7 +77,7 @@ public class OneCardGameGUI extends JPanel {
                 cardButton.addActionListener(e -> {
                     hand.remove(card); // 핸드에서 카드 제거
                     handPanel.remove(cardButton); // 해당 버튼 제거
-                    client.playCard(card, hand, playerName); // 서버로 카드 제출 요청
+                    client.playCard(card, hand, playerName, null); // 서버로 카드 제출 요청
 
                     // UI 갱신
                     handPanel.revalidate();
@@ -196,7 +196,15 @@ public class OneCardGameGUI extends JPanel {
                 // 현재 클라이언트의 패널에서 클릭한 경우에만 이벤트 발생
                 if (client.getName().equals(playerName)) {
                     System.out.println("클릭한 카드 : " + card + " by client " + client.getName());
-                    client.playCard(card, hand, playerName);
+                    if ("7".equals(card.getRank())) {
+                        // 숫자가 7인 경우 팝업 창 띄우기
+                        String selectedSuit = showSuitSelectionDialog(card.getSuit());
+                        Card newCard = new Card("7", selectedSuit);
+                        client.playCard(card, hand, playerName, newCard);
+                    } else {
+                        // 일반 카드 처리
+                        client.playCard(card, hand, playerName, null);
+                    }
                 } else {
                     System.out.println("다른 플레이어의 패널에서 카드를 제출할 수 없습니다.");
                 }
@@ -251,6 +259,29 @@ public class OneCardGameGUI extends JPanel {
 
         targetPanel.revalidate();
         targetPanel.repaint();
+    }
+
+    private String showSuitSelectionDialog(String suit) {
+        // 선택지 버튼 생성
+        String[] suits = { "Diamond", "Clover", "Heart", "Spade" };
+        String selectedSuit = (String) JOptionPane.showInputDialog(
+                null,
+                "Choose a suit",
+                "Select Suit",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                suits, // 선택지 배열
+                suits[0] // 기본값
+        );
+
+        // 사용자가 취소하거나 선택하지 않은 경우 null 반환
+        if (selectedSuit == null) {
+            System.out.println("사용자가 선택을 취소했습니다.");
+            return suit;
+        }
+
+        System.out.println("선택된 무늬: " + selectedSuit);
+        return selectedSuit;
     }
 
     public void updateRemainingCards(Card submittedCard, Card cardDeckTop) {
@@ -434,36 +465,35 @@ public class OneCardGameGUI extends JPanel {
             System.out.println("ERROR: 부모 컨테이너를 찾을 수 없습니다.");
             return;
         }
-    
+
         // 현재 패널을 부모에서 완전히 제거
         parent.removeAll();
-    
+
         // 새로운 ResultPanel 추가
         ResultPanel resultPanel = new ResultPanel(winnerClient);
         parent.add(resultPanel);
-    
+
         // 부모 컨테이너 갱신
         parent.revalidate();
         parent.repaint();
     }
 
     private void disconnectFromServer() {
-    try {
-        if (client != null && client.getSocket() != null) {
-            System.out.println("서버와의 연결을 종료합니다...");
+        try {
+            if (client != null && client.getSocket() != null) {
+                System.out.println("서버와의 연결을 종료합니다...");
 
-            // 서버에 종료 메시지 전송 (선택 사항)
-            PrintWriter out = new PrintWriter(client.getSocket().getOutputStream(), true);
-            out.println("EXIT"); // 서버에 클라이언트 종료 알림
+                // 서버에 종료 메시지 전송 (선택 사항)
+                PrintWriter out = new PrintWriter(client.getSocket().getOutputStream(), true);
+                out.println("EXIT"); // 서버에 클라이언트 종료 알림
 
-            // 소켓과 스트림 닫기
-            client.getSocket().close();
-            System.out.println("서버와의 연결이 정상적으로 종료되었습니다.");
+                // 소켓과 스트림 닫기
+                client.getSocket().close();
+                System.out.println("서버와의 연결이 정상적으로 종료되었습니다.");
+            }
+        } catch (IOException e) {
+            System.out.println("서버 연결 종료 중 오류 발생: " + e.getMessage());
         }
-    } catch (IOException e) {
-        System.out.println("서버 연결 종료 중 오류 발생: " + e.getMessage());
     }
-}
-    
 
 }
