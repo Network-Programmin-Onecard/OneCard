@@ -7,7 +7,6 @@ public class RoundedButton extends JButton {
 
     public RoundedButton(String text) {
         super(text);
-        //setContentAreaFilled(false); // 배경 투명화
         setFocusPainted(false);      // 포커스 테두리 제거
         setBorderPainted(false);     // 테두리 제거
     }

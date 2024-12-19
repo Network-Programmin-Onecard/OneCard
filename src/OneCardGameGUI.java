@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.List;
@@ -496,5 +495,4 @@ public class OneCardGameGUI extends JPanel {
             System.out.println("서버 연결 종료 중 오류 발생: " + e.getMessage());
         }
     }
-
 }

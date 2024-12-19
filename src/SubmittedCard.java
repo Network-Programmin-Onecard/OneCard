@@ -44,5 +44,4 @@ public class SubmittedCard {
     public void checkingCard(){
         System.out.println("현재 제출된 카드 맨 위? : " + this.submittedCards.get(0));
     }
-    
 }

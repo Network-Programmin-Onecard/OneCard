@@ -3,7 +3,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Deck {
-    private List<Card> cards;   // 카드 배열. 게임이 시작하면 셔플된 후 플레이어에게 배분, 남은 카드는 해당 배열에 존재재
+    private List<Card> cards;   // 카드 배열. 게임이 시작하면 셔플된 후 플레이어에게 배분, 남은 카드는 해당 배열에 존재
 
     public List<Card> getCards(){
         return cards;

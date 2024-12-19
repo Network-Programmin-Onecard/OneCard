@@ -68,7 +68,6 @@ public class Client {
     }
 
     // 서버 메시지 수신 및 처리
-    // Client.java
     private void receiveMessages() {
         try {
             String message;
@@ -108,11 +107,9 @@ public class Client {
             submittedCard = parseCard(parts[0]); // 첫 번째 카드
             gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
         } else {
-            // String 데이터를 Card 객체로 변환
             submittedCard = parseCard(parts[0]); // 첫 번째 카드
             cardDeckTop = parts.length > 1 ? parseCard(parts[1]) : null; // 두 번째 카드 (없으면 null)
             gui.updateRemainingCards(submittedCard, cardDeckTop); // GUI 갱신
-
         }
     }
 
@@ -136,7 +133,6 @@ public class Client {
         return hand;
     }
 
-    // Client.java - updateHand
     public void updateHand(List<Card> newHand) {
         this.hand.clear(); // 기존 손패 비우기
         this.hand.addAll(newHand); // 새 손패 추가
@@ -177,7 +173,6 @@ public class Client {
     public void sendSubmittedCard(Card card, String clientName) {
         sendMessage("SUBMITTED_CARD|" + card.getRank() + "|" + card.getSuit() + "|" + clientName);
         System.out.println("받은 카드: " + card);
-
     }
 
     public void requestCardFromDeck(String playerName) {
