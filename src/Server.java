@@ -91,7 +91,7 @@ public class Server {
 
         new Thread(() -> {
             try {
-                Thread.sleep(100); // 0.1초 대기
+                Thread.sleep(300); // 0.1초 대기
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
