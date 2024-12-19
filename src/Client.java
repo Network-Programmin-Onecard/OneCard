@@ -25,20 +25,20 @@ public class Client {
         return this.socket;
     }
 
-    public boolean connect(String ip, int port, String userName) {
+    public boolean connect(String ip, int port, String userName, OneCardGameGUI gui) {
         try {
             socket = new Socket(ip, port);
-            System.out.println("서버 연결 성공"); // 디버깅
+            System.out.println("서버 연결 성공");
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
-
+    
             // 서버에 이름 전송
             out.println(userName);
-            Thread.sleep(500);
-
+            this.gui = gui; // GUI 참조를 설정
+            
             String response = in.readLine();
-            System.out.println("서버 응답 수신: " + response); // 디버깅
-
+            System.out.println("서버 응답 수신: " + response);
+    
             if (response != null && response.startsWith("NAME_ERROR")) {
                 // 이름 중복 처리
                 SwingUtilities.invokeLater(() -> {
@@ -46,15 +46,15 @@ public class Client {
                             "입력한 이름이 이미 사용 중입니다. 다른 이름을 입력하세요.",
                             "이름 중복", JOptionPane.WARNING_MESSAGE);
                 });
-                return false; // 연결 실패
+                return false;
             }
-
+    
             this.name = userName;
             // 서버 응답 처리 스레드 시작
             new Thread(this::receiveMessages).start();
             return true;
-
-        } catch (IOException | InterruptedException e) {
+    
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
