@@ -38,14 +38,15 @@ public class OneCardGame extends JFrame {
     
             try {
                 client = new Client();
-                boolean connected = client.connect(ip, Integer.parseInt(port), userName);
+                gamePanel = new OneCardGameGUI(client); // 게임 패널 생성
+                client.setGUI(gamePanel); // GUI를 Client에 연결
+    
+                boolean connected = client.connect(ip, Integer.parseInt(port), userName, gamePanel);
     
                 if (connected) {
-                    gamePanel = new OneCardGameGUI(client); // client 전달
                     cardPanel.add(gamePanel, "Game");
                     cardLayout.show(cardPanel, "Game");
-                    client.setGUI(gamePanel); // Client에 GUI 연결
-                } 
+                }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(null, "포트 번호는 숫자여야 합니다.", "Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
@@ -54,6 +55,7 @@ public class OneCardGame extends JFrame {
             }
         }
     }
+    
     
 
     public static void main(String[] args) {
