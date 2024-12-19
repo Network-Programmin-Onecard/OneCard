@@ -149,7 +149,9 @@ public class ClientHandler implements Runnable {
             String newCard_suit = parts[4];
             Card card = new Card(rank, suit);
             System.out.println("handleCardSumission 실행 전 topCard 값: " + topCard);
+            Card topCard = server.getTopSubmittedCard();
             if (server.isPlayerTurn(clientName)) {
+
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
                     server.NextTurn();
                     if (card.getRank().equals("7")) {
