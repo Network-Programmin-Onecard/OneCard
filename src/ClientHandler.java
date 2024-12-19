@@ -14,7 +14,7 @@ public class ClientHandler implements Runnable {
     private static final Set<String> clientNames = Collections.synchronizedSet(new HashSet<>());
     private static Card topCard;
 
-    public static void resetTopCard(){
+    public static void resetTopCard() {
         topCard = null;
     }
 
@@ -35,17 +35,16 @@ public class ClientHandler implements Runnable {
     }
 
     public void sendSubmittedCardToClient(Card playerSubmittedCard, String clientName, Card newCard) {
-        System.out.println("sendSubmittedCardtoClient 전 값 확인: " + playerSubmittedCard+","+newCard);
         if (newCard == null) {
-            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|" + "NONE");
-        }
-        else {
-            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|" + newCard.getSuit());
+            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|"
+                    + "NONE");
+        } else {
+            sendMessage("SUBMITTED_CARD|" + playerSubmittedCard.getRank() + "|" + playerSubmittedCard.getSuit() + "|"
+                    + newCard.getSuit());
         }
     }
 
     public void sendCardDeckToClient(Card CardDeck, String clientName) {
-        System.out.println("sendCardDeckToClient 정상 실행됨");
         System.out.println("DRAW_CARD|" + CardDeck.getRank() + "|" + CardDeck.getSuit() + "|" + clientName);
         sendMessage("DRAW_CARD|" + CardDeck.getRank() + "|" + CardDeck.getSuit() + "|" + clientName);
     }
@@ -102,6 +101,7 @@ public class ClientHandler implements Runnable {
                     System.out.println("알 수 없는 메시지: " + message);
                 }
             }
+            System.out.println("이번 턴 TopCard의 결과는? " + topCard);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -139,18 +139,16 @@ public class ClientHandler implements Runnable {
             String clientName = parts[3];
             String newCard_suit = parts[4];
             Card card = new Card(rank, suit);
-            System.out.println("handleCardSumission 실행 전 topCard 값: " + topCard);
-            topCard.setRank(rank);
-            topCard.setSuit(suit);
+            Card newCard = null;
             if (server.isPlayerTurn(clientName)) {
                 if (card.getRank().equals(topCard.getRank()) || card.getSuit().equals(topCard.getSuit())) {
+                    topCard.setSuit(suit);
+                    topCard.setRank(rank);
                     server.NextTurn();
                     if (card.getRank().equals("7")) {
-                        Card newCard = new Card("7", newCard_suit);
-                        System.out.println("sendSubmittedCardToClient 전 newCard 값: " + newCard);
-                        game.getSubmittedCard().addCard(newCard); // 제출 카드 갱신 -> 기준 변경 안됨 문제
-                        sendSubmittedCardToClient(card, clientName, newCard);
-                        card = newCard;
+                        newCard = new Card("7", newCard_suit);
+                        game.getSubmittedCard().addCard(card); // 제출 카드 갱신
+                        //sendSubmittedCardToClient(card, clientName, newCard);
                         topCard.setSuit(newCard_suit);
                     } else {
                         // 다른 Rank에 따른 처리
@@ -163,9 +161,10 @@ public class ClientHandler implements Runnable {
                         }
                         // 공통 처리
                         game.getSubmittedCard().addCard(card);
-                        sendSubmittedCardToClient(card, clientName, null);
+                        //sendSubmittedCardToClient(card, clientName, null);
                     }
-                    boolean isGameOver = server.handleCardSubmission(clientName, card);
+                    boolean isGameOver = server.handleCardSubmission(clientName, card, newCard);
+
                     if (isGameOver) {
                         server.broadcastMessage("GAME_WINNER|" + "Player " + clientName);
                     } else {
@@ -188,15 +187,12 @@ public class ClientHandler implements Runnable {
         synchronized (game) {
             if (server.isPlayerTurn(clientName)) {
                 server.NextTurn();
-                System.out.println("카드 덱의 잔여 카드 개수 draw 전: " + game.getDeckSize());
                 Card drawnCard = game.drawCardFromDeck(); // Deck에서 카드 한 장 추출
-                System.out.println("카드 덱의 잔여 카드 개수 draw 후: " + game.getDeckSize());
-                server.isDeckhaveOneCard(); // 이게 그거 그ㅡㅡㅡㅡㅡㅡ 덱에 카드가 한장이면 submittedcard 에서 맨 윗장 빼고 가져오는거
+                server.isDeckhaveOneCard(); 
                 if (drawnCard != null) {
                     game.addCardToPlayerHand(playerName, drawnCard); // 플레이어 손패에 추가
                     server.broadcastGameState(); // 모든 클라이언트에 업데이트된 게임 상태 브로드캐스트
                     System.out.println("handleDrawCard에서 사용된 카드: " + drawnCard.getRank() + "-" + drawnCard.getSuit());
-                    // server.handleCardDeck(playerName, drawnCard);
                     server.handleCardDeck(playerName);
                 } else {
                     System.out.println("ERROR: Deck에 남은 카드가 없습니다.");

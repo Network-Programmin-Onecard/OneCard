@@ -73,6 +73,7 @@ public class Client {
         try {
             String message;
             while ((message = in.readLine()) != null) {
+                System.out.println("receiveMessages 문자 내용 확인: " + message);
                 if (message.startsWith("GAME_STATE:")) {
                     String gameState = message.substring(11); // 상태 데이터
                     updateGameState(gameState);
@@ -90,7 +91,7 @@ public class Client {
                     onServerMessageReceived(message); // 게임 상태 파싱 후 업데이트
                 } else if (message.startsWith("GAME_WINNER|")) {
                     System.out.println("서버 메시지: " + message);
-                    onServerMessageReceived(message);
+                    onServerMessageReceived(message);   // 게임 승자 확인
                 } else {
                     System.out.println("오류 메시지: " + message);
                 }
@@ -197,14 +198,14 @@ public class Client {
             String rank = parts[1];
             String suit = parts[2];
             String newSuit = parts[3];
-            System.out.println("확인용: " + rank + "," + suit + "," + newSuit);
             Card card = new Card(rank, suit);
             hand.remove(card);
             System.out.println("손패에서 제거됨: " + card);
             SwingUtilities.invokeLater(() -> gui.updateHand(this.getName(), hand)); // UI 갱신
-            if (newSuit != "NONE") {
+            if (newSuit.equals("NONE") ) {
                 gui.updateSubmittedCard(card);
-            } else {
+            }  
+            else {
                 Card newCard = new Card(rank, newSuit);
                 gui.updateSubmittedCard(newCard);
             }

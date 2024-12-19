@@ -85,13 +85,12 @@ public class Server {
     }
 
     private void startNewGame() {
-        // 게임 상태를 초기화하고 시작
-        resetGame(); // 게임 상태 초기화
+        resetGame();
         System.out.println("4명의 클라이언트가 접속했습니다. 새로운 게임을 시작합니다.");
 
         new Thread(() -> {
             try {
-                Thread.sleep(300); // 0.1초 대기
+                Thread.sleep(500); // 초기화 지연 시간 추가
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -101,7 +100,7 @@ public class Server {
                 for (ClientHandler client : clients) {
                     playerNames.add(client.getClientName());
                 }
-                game.startGame(playerNames); // 게임 초기화
+                game.startGame(playerNames);
             }
             broadcastGameState(); // 초기 게임 상태 전송
             initializeGameState();
@@ -112,8 +111,8 @@ public class Server {
         synchronized (game) {
             game.reset(); // 게임 상태 리셋
             clientNumber = 0;
+            course = Course.SEQUENCE;
             ClientHandler.resetTopCard();
-            System.out.println("게임 상태가 초기화되었습니다.");
         }
     }
 
@@ -174,10 +173,16 @@ public class Server {
         }
     }
 
-    public synchronized boolean handleCardSubmission(String name, Card card) {
+    public synchronized boolean handleCardSubmission(String name, Card card, Card newCard) {
         try {
-            for (ClientHandler client : clients) {
-                client.sendSubmittedCardToClient(card, name, null);
+            if (newCard == null) {
+                for (ClientHandler client : clients) {
+                    client.sendSubmittedCardToClient(card, name, null);
+                }
+            } else {
+                for (ClientHandler client : clients) {
+                    client.sendSubmittedCardToClient(card, name, newCard);
+                }
             }
             List<Card> remainingDeck = game.getRemainingDeck();
             submittedCard = game.updateSubmittedCard(card).toString();

@@ -25,6 +25,8 @@ public class ResultPanel extends JPanel {
 
         // 게임 종료 버튼 추가 (중간 레이어)
         JButton exitButton = new JButton("exit");
+        exitButton.setBackground(Color.ORANGE);
+        exitButton.setForeground(Color.WHITE);
         exitButton.setFont(new Font("Malgun Gothic", Font.BOLD, 20));
         exitButton.setBounds(500, 650, 200, 50); // 위치 및 크기 설정
         exitButton.addActionListener(e -> {
@@ -33,7 +35,6 @@ public class ResultPanel extends JPanel {
         });
         layeredPane.add(exitButton, JLayeredPane.PALETTE_LAYER);
 
-        // JLayeredPane을 패널에 추가
         add(layeredPane, BorderLayout.CENTER);
     }
 }
